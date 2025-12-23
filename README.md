@@ -330,7 +330,19 @@ For issues or questions:
 
 ## License
 
-LGPL-3
+**PROPRIETARY - ALL RIGHTS RESERVED**
+
+This software is proprietary and confidential. All rights reserved.
+
+Copyright (c) 2026 Revenax Digital Services, Mohamed A. Abdallah
+
+See [LICENSE](LICENSE) file for full terms and conditions.
+
+**Restrictions:**
+- No copying, modification, or distribution without explicit written permission
+- No reverse engineering or decompilation
+- No removal of copyright notices
+- Use is restricted to authorized installations only
 
 ## Version
 
