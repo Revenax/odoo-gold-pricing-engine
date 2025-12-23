@@ -4,6 +4,7 @@
 # Website: https://www.revenax.com
 
 import logging
+import re
 import requests
 from odoo import models, fields, api
 from odoo.exceptions import UserError
@@ -37,52 +38,85 @@ class GoldPriceService(models.Model):
     
     def _fetch_gold_price_from_api(self):
         """
-        Fetch gold price from external API.
-        Replace URL with actual API endpoint.
+        Fetch gold price from external API using cookie authentication.
+        Parses Arabic text response to extract 21K gold price.
         
-        Expected API response format (JSON):
-        {
-            "price_per_gram": 75.50,
-            "currency": "USD",
-            "timestamp": "2026-01-01T12:00:00Z"
-        }
+        Expected API response format (HTML/text with Arabic):
+        "علما بأن سعر البيع لجرام الذهب عيار 21 هو 5415 جنيها"
+        Extracts price after "الذهب عيار 21 هو "
         
-        :return: float - Gold price per gram
+        :return: float - Gold price per gram (21K price)
         """
-        api_url = self.env['ir.config_parameter'].sudo().get_param(
-            'gold_pricing.api_url',
-            'https://api.example.com/gold/price'
-        )
-        
-        api_key = self.env['ir.config_parameter'].sudo().get_param(
-            'gold_pricing.api_key',
+        api_endpoint = self.env['ir.config_parameter'].sudo().get_param(
+            'gold_api_endpoint',
             ''
         )
         
-        timeout = 10
-        headers = {}
+        api_cookie = self.env['ir.config_parameter'].sudo().get_param(
+            'gold_api_cookie',
+            ''
+        )
         
-        if api_key:
-            headers['Authorization'] = f'Bearer {api_key}'
+        if not api_endpoint:
+            raise ValueError('GOLD_API_ENDPOINT is not configured. Please set gold_api_endpoint system parameter.')
+        
+        if not api_cookie:
+            raise ValueError('GOLD_API_COOKIE is not configured. Please set gold_api_cookie system parameter.')
+        
+        timeout = 10
+        headers = {
+            'Cookie': api_cookie,
+            'accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8',
+            'accept-language': 'en-US,en;q=0.7',
+            'cache-control': 'max-age=0',
+            'dnt': '1',
+            'user-agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/142.0.0.0 Safari/537.36',
+            'sec-ch-ua': '"Chromium";v="142", "Brave";v="142", "Not_A Brand";v="99"',
+            'sec-ch-ua-mobile': '?0',
+            'sec-ch-ua-platform': '"macOS"',
+            'sec-fetch-dest': 'document',
+            'sec-fetch-mode': 'navigate',
+            'sec-fetch-site': 'none',
+            'sec-fetch-user': '?1',
+            'sec-gpc': '1',
+            'upgrade-insecure-requests': '1',
+        }
         
         try:
-            response = requests.get(api_url, headers=headers, timeout=timeout)
+            response = requests.get(api_endpoint, headers=headers, timeout=timeout)
             response.raise_for_status()
-            data = response.json()
             
-            # Extract price from response
-            # Adjust these keys based on your actual API response structure
-            price_per_gram = data.get('price_per_gram') or data.get('price') or data.get('rate')
+            # Parse as text/HTML (for Arabic text APIs)
+            text = response.text
             
-            if not price_per_gram:
-                raise ValueError('Price not found in API response')
+            # Parse Arabic text to extract 21K gold price
+            # Pattern: "علما بأن سعر البيع لجرام الذهب عيار 21 هو 5415 جنيها"
+            # Extract number after "الذهب عيار 21 هو "
+            match = re.search(r'(?<=الذهب عيار 21 هو )\d+', text)
             
-            return float(price_per_gram)
+            if match:
+                price = int(match.group(0))
+                if price <= 0:
+                    raise ValueError(f'Invalid price extracted: {price}')
+                # Return price as float (assuming price is per gram)
+                return float(price)
+            
+            # If no Arabic pattern found, try alternative patterns
+            # Try to find any number that might be a price
+            numbers = re.findall(r'\d+', text)
+            if numbers:
+                # Use the largest number found (likely the price)
+                potential_price = max([int(n) for n in numbers if len(n) >= 3])
+                if potential_price > 0:
+                    _logger.warning('Extracted price using fallback pattern: %s', potential_price)
+                    return float(potential_price)
+            
+            raise ValueError('Price not found in API response')
             
         except requests.exceptions.RequestException as e:
             _logger.error('API request failed: %s', str(e))
             raise
-        except (ValueError, KeyError) as e:
+        except (ValueError, KeyError, AttributeError) as e:
             _logger.error('Invalid API response format: %s', str(e))
             raise
     
