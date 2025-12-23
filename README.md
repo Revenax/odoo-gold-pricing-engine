@@ -77,16 +77,14 @@ gold_pricing/
 
      | Key | Value | Description |
      |-----|-------|-------------|
-     | `gold_pricing.api_url` | `https://your-api.com/gold/price` | Gold price API endpoint |
-     | `gold_pricing.api_key` | `your-api-key` | API authentication key (if required) |
-     | `gold_pricing.fallback_price` | `75.0` | Fallback price when API is unavailable |
+     | `gold_api_endpoint` | `https://your-api.com/gold/price` | Gold price API endpoint (required) |
+     | `gold_api_cookie` | `your-cookie-value` | API authentication cookie (required) |
 
    **Alternative**: Use Odoo shell to set parameters:
 
    ```python
-   self.env['ir.config_parameter'].sudo().set_param('gold_pricing.api_url', 'https://your-api.com/gold/price')
-   self.env['ir.config_parameter'].sudo().set_param('gold_pricing.api_key', 'your-api-key')
-   self.env['ir.config_parameter'].sudo().set_param('gold_pricing.fallback_price', '75.0')
+   self.env['ir.config_parameter'].sudo().set_param('gold_api_endpoint', 'https://your-api.com/gold/price')
+   self.env['ir.config_parameter'].sudo().set_param('gold_api_cookie', 'your-cookie-value')
    ```
 
 5. **Verify Cron Job**
@@ -160,41 +158,25 @@ The module enforces pricing rules at both backend and frontend levels:
 
 ### Expected API Response Format
 
-The module expects a JSON response with one of these formats:
-
-```json
-{
-  "price_per_gram": 75.50,
-  "currency": "USD",
-  "timestamp": "2026-01-01T12:00:00Z"
-}
+The module expects HTML/text responses with Arabic content. Expected pattern:
+```
+علما بأن سعر البيع لجرام الذهب عيار 21 هو 5415 جنيها
 ```
 
-Or:
+The module extracts the 21K gold price using regex pattern: `الذهب عيار 21 هو \d+`
 
-```json
-{
-  "price": 75.50
-}
-```
-
-Or:
-
-```json
-{
-  "rate": 75.50
-}
-```
-
-The module will automatically extract the price from any of these fields.
+Example: From the text above, it extracts `5415` as the 21K gold price per gram.
 
 ### API Authentication
 
-If your API requires authentication, set the `gold_pricing.api_key` parameter. The module will send it as:
+The module uses cookie-based authentication. Set `gold_api_cookie` parameter. The module will:
+- Send the cookie in the request headers
+- Include browser-like headers for compatibility
+- Parse HTML/text responses with Arabic text support
 
-```
-Authorization: Bearer <api_key>
-```
+Cookie format examples:
+- Single cookie: `session_id=abc123`
+- Multiple cookies: `session_id=abc123; auth_token=xyz789`
 
 ### Error Handling
 
@@ -244,7 +226,7 @@ The module uses the following purity factors:
    - Verify "Update Gold Product Prices" is active
 
 2. **Check API Configuration**
-   - Verify API URL and key in System Parameters
+   - Verify `gold_api_endpoint` and `gold_api_cookie` in System Parameters
    - Test API endpoint manually
 
 3. **Check Logs**
@@ -265,11 +247,11 @@ The module uses the following purity factors:
 
 1. **Test API Manually**
    ```bash
-   curl -H "Authorization: Bearer YOUR_KEY" https://your-api.com/gold/price
+   curl -H "Cookie: YOUR_COOKIE" https://your-api.com/gold/price
    ```
 
 2. **Check Fallback Price**
-   - Verify `gold_pricing.fallback_price` is set
+   - Verify `gold_pricing.fallback_price` is set (optional, default: 75.0)
    - Module will use this if API fails
 
 3. **Review Network Settings**
