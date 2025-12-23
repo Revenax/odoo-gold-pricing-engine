@@ -1,0 +1,47 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <record id="product_template_form_view_gold_pricing" model="ir.ui.view">
+        <field name="name">product.template.form.gold.pricing</field>
+        <field name="model">product.template</field>
+        <field name="inherit_id" ref="product.product_template_form_view"/>
+        <field name="arch" type="xml">
+            <!-- Add gold pricing fields to the form view -->
+            <xpath expr="//field[@name='standard_price']" position="after">
+                <group string="Gold Pricing" col="4" invisible="not is_gold_product">
+                    <field name="is_gold_product" invisible="1"/>
+                    <field name="gold_weight_g" required="1" attrs="{'required': [('is_gold_product', '=', True)]}"/>
+                    <field name="gold_purity" required="1" attrs="{'required': [('is_gold_product', '=', True)]}"/>
+                    <field name="gold_markup_value" required="1" attrs="{'required': [('is_gold_product', '=', True)]}"/>
+                    <field name="gold_cost_price" readonly="1" 
+                           attrs="{'invisible': [('user_has_groups', '!=', 'base.group_system')]}"
+                           groups="base.group_system"/>
+                    <field name="gold_min_sale_price" readonly="1"/>
+                </group>
+            </xpath>
+            
+            <!-- Make weight and markup required when gold product -->
+            <xpath expr="//field[@name='gold_weight_g']" position="attributes">
+                <attribute name="attrs">{'required': [('is_gold_product', '=', True)]}</attribute>
+            </xpath>
+            
+            <xpath expr="//field[@name='gold_markup_value']" position="attributes">
+                <attribute name="attrs">{'required': [('is_gold_product', '=', True)]}</attribute>
+            </xpath>
+        </field>
+    </record>
+    
+    <!-- Tree view to show gold pricing info -->
+    <record id="product_template_tree_view_gold_pricing" model="ir.ui.view">
+        <field name="name">product.template.tree.gold.pricing</field>
+        <field name="model">product.template</field>
+        <field name="inherit_id" ref="product.product_template_tree_view"/>
+        <field name="arch" type="xml">
+            <xpath expr="//field[@name='list_price']" position="after">
+                <field name="is_gold_product" optional="hide"/>
+                <field name="gold_min_sale_price" optional="hide" 
+                       attrs="{'invisible': [('is_gold_product', '=', False)]}"/>
+            </xpath>
+        </field>
+    </record>
+</odoo>
+
