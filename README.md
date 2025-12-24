@@ -115,9 +115,10 @@ gold_pricing/
 4. **Automatic Calculations**
 
    Once weight, purity, and markup are set:
-   - `gold_cost_price` = weight × base_price × purity_factor
-   - `list_price` = cost_price + markup
-   - `gold_min_sale_price` = cost_price + (markup × 0.5)
+   - `gold_cost_price` = (GoldPricePerGram × purity_factor) × weight
+   - `markup_total` = markup × weight
+   - `list_price` = cost_price + markup_total
+   - `gold_min_sale_price` = cost_price + (markup_total × 0.5)
    - `standard_price` = cost_price
 
 ### Price Updates

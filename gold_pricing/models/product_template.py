@@ -92,13 +92,25 @@ class ProductTemplate(models.Model):
             purity_factor = Decimal(str(purity_factors.get(record.gold_purity, 0)))
             markup = Decimal(str(record.gold_markup_value or 0))
             
-            # Calculate cost: weight × base_price × purity_factor
-            cost = (weight * base_price * purity_factor).quantize(
+            # Calculate cost: GoldPricePerGram × weight (adjusted for purity)
+            # GoldPricePerGram is adjusted by purity factor
+            adjusted_gold_price = base_price * purity_factor
+            cost = (adjusted_gold_price * weight).quantize(
                 Decimal('0.01'), rounding=ROUND_HALF_UP
             )
             
-            # Calculate minimum sale price: cost + (markup × 0.5)
-            min_sale_price = (cost + (markup * Decimal('0.5'))).quantize(
+            # Calculate markup total: markup × weight
+            markup_total = (markup * weight).quantize(
+                Decimal('0.01'), rounding=ROUND_HALF_UP
+            )
+            
+            # Calculate total price: cost + markup_total
+            total_price = (cost + markup_total).quantize(
+                Decimal('0.01'), rounding=ROUND_HALF_UP
+            )
+            
+            # Calculate minimum sale price: cost + (markup_total × 0.5)
+            min_sale_price = (cost + (markup_total * Decimal('0.5'))).quantize(
                 Decimal('0.01'), rounding=ROUND_HALF_UP
             )
             
@@ -157,18 +169,25 @@ class ProductTemplate(models.Model):
             purity_factor = Decimal(str(purity_factors[product.gold_purity]))
             markup = Decimal(str(product.gold_markup_value))
             
-            # Calculate cost: weight × base_price × purity_factor
-            cost = (weight * base_price * purity_factor).quantize(
+            # Calculate cost: GoldPricePerGram × weight (adjusted for purity)
+            # GoldPricePerGram is adjusted by purity factor
+            adjusted_gold_price = base_price * purity_factor
+            cost = (adjusted_gold_price * weight).quantize(
                 Decimal('0.01'), rounding=ROUND_HALF_UP
             )
             
-            # Calculate sale price: cost + markup
-            sale_price = (cost + markup).quantize(
+            # Calculate markup total: markup × weight
+            markup_total = (markup * weight).quantize(
                 Decimal('0.01'), rounding=ROUND_HALF_UP
             )
             
-            # Calculate minimum sale price: cost + (markup × 0.5)
-            min_sale_price = (cost + (markup * Decimal('0.5'))).quantize(
+            # Calculate total price: cost + markup_total
+            sale_price = (cost + markup_total).quantize(
+                Decimal('0.01'), rounding=ROUND_HALF_UP
+            )
+            
+            # Calculate minimum sale price: cost + (markup_total × 0.5)
+            min_sale_price = (cost + (markup_total * Decimal('0.5'))).quantize(
                 Decimal('0.01'), rounding=ROUND_HALF_UP
             )
             
