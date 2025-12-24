@@ -11,7 +11,7 @@
                     <field name="is_gold_product" invisible="1"/>
                     <field name="gold_weight_g" required="is_gold_product"/>
                     <field name="gold_purity" required="is_gold_product"/>
-                    <field name="gold_markup_value" required="is_gold_product"/>
+                    <field name="gold_type" required="is_gold_product"/>
                     <field name="gold_cost_price" readonly="1" groups="base.group_system"/>
                     <field name="gold_min_sale_price" readonly="1"/>
                 </group>
