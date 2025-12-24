@@ -6,4 +6,5 @@
 from . import product_template
 from . import gold_price_service
 from . import pos_order
+from . import gold_pricing_config
 
