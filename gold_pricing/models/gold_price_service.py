@@ -48,12 +48,12 @@ class GoldPriceService(models.Model):
         :return: float - Gold price per gram (21K price)
         """
         api_endpoint = self.env['ir.config_parameter'].sudo().get_param(
-            'gold_api_endpoint',
+            'gold_pricing.gold_api_endpoint',
             ''
         )
         
         api_cookie = self.env['ir.config_parameter'].sudo().get_param(
-            'gold_api_cookie',
+            'gold_pricing.gold_api_cookie',
             ''
         )
         

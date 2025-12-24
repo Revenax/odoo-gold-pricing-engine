@@ -6,9 +6,7 @@
 from odoo import models, fields, api
 
 
-class GoldPricingConfig(models.TransientModel):
-    _name = 'gold.pricing.config'
-    _description = 'Gold Pricing Configuration'
+class ResConfigSettings(models.TransientModel):
     _inherit = 'res.config.settings'
 
     gold_api_endpoint = fields.Char(
