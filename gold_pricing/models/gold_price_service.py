@@ -155,10 +155,13 @@ class GoldPriceService(models.Model):
             base_gold_price = self._fetch_gold_price_from_api()
             _logger.info('Fetched gold price: %s per gram', base_gold_price)
             
-            # Get all gold products
+            # Get all gold products with required data
+            # Only update products that have weight, purity, and type configured
             gold_products = self.env['product.template'].search([
                 ('is_gold_product', '=', True),
                 ('gold_purity', '!=', False),
+                ('gold_type', '!=', False),
+                ('gold_weight_g', '>', 0),
             ])
             
             if not gold_products:
