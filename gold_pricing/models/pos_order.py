@@ -40,16 +40,21 @@ class PosOrder(models.Model):
                         )
                     
                     # Check if discount exceeds 50% of markup
-                    # Markup total = markup per gram × weight
-                    if product.gold_markup_value > 0 and product.gold_weight_g > 0:
-                        markup_total = product.gold_markup_value * product.gold_weight_g
-                        max_discount_percent = (markup_total * 0.5 / product.list_price) * 100
-                        if discount > max_discount_percent:
-                            raise ValidationError(
-                                f'Discount for {product.name} cannot exceed '
-                                f'{max_discount_percent:.2f}% (50% of markup). '
-                                f'Current discount: {discount:.2f}%'
-                            )
+                    # Markup total = markup per gram × weight (from settings)
+                    if product.gold_type and product.gold_weight_g and product.gold_weight_g > 0:
+                        config = self.env['ir.config_parameter'].sudo()
+                        markup_param_key = f'gold_pricing.markup_{product.gold_type}'
+                        markup_per_gram = float(config.get_param(markup_param_key, '0.0'))
+                        
+                        if markup_per_gram > 0:
+                            markup_total = markup_per_gram * product.gold_weight_g
+                            max_discount_percent = (markup_total * 0.5 / product.list_price) * 100
+                            if discount > max_discount_percent:
+                                raise ValidationError(
+                                    f'Discount for {product.name} cannot exceed '
+                                    f'{max_discount_percent:.2f}% (50% of markup). '
+                                    f'Current discount: {discount:.2f}%'
+                                )
         
         return order_fields
     

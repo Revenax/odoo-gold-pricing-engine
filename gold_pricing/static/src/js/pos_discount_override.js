@@ -26,17 +26,18 @@ patch(Orderline.prototype, {
 
     const product = this.product;
     const currentPrice = this.get_unit_price();
-    const markupPerGram = product.gold_markup_value || 0;
+    const listPrice = product.list_price || currentPrice;
+    const costPrice = product.gold_cost_price || 0;
     const weight = product.gold_weight_g || 0;
     const minSalePrice = product.gold_min_sale_price || 0;
 
-    if (markupPerGram <= 0 || weight <= 0 || minSalePrice <= 0) {
+    if (costPrice <= 0 || weight <= 0 || minSalePrice <= 0) {
       return super.set_discount(...arguments);
     }
 
-    // Calculate markup total: markup per gram × weight
-    const markupTotal = markupPerGram * weight;
-    const listPrice = product.list_price || currentPrice;
+    // Calculate markup total from list price and cost price
+    // markup_total = list_price - cost_price
+    const markupTotal = listPrice - costPrice;
     const maxDiscountPercent = ((markupTotal * 0.5) / listPrice) * 100;
     const clampedDiscount = Math.min(discount, maxDiscountPercent);
     const finalPrice = currentPrice * (1 - clampedDiscount / 100.0);
@@ -157,13 +158,13 @@ patch(ProductScreen.prototype, {
       const product = selectedLine.product;
       const minSalePrice = product.gold_min_sale_price || 0;
       const currentPrice = selectedLine.get_unit_price();
-      const markupPerGram = product.gold_markup_value || 0;
-      const weight = product.gold_weight_g || 0;
+      const listPrice = product.list_price || currentPrice;
+      const costPrice = product.gold_cost_price || 0;
 
-      if (minSalePrice > 0 && markupPerGram > 0 && weight > 0) {
-        // Calculate markup total: markup per gram × weight
-        const markupTotal = markupPerGram * weight;
-        const maxDiscountPercent = ((markupTotal * 0.5) / product.list_price) * 100;
+      if (minSalePrice > 0 && costPrice > 0) {
+        // Calculate markup total from list price and cost price
+        const markupTotal = listPrice - costPrice;
+        const maxDiscountPercent = ((markupTotal * 0.5) / listPrice) * 100;
         const maxDiscountForMinPrice =
           ((currentPrice - minSalePrice) / currentPrice) * 100;
         const actualMaxDiscount = Math.min(
