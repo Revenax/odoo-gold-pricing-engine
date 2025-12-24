@@ -32,6 +32,7 @@
         'security/gold_pricing_security.xml',
         'data/gold_pricing_cron.xml',
         'views/product_template_views.xml',
+        'views/gold_pricing_config_views.xml',
     ],
     'assets': {
         'point_of_sale.assets': [

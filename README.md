@@ -68,23 +68,39 @@ gold_pricing/
    - Search for "Gold Pricing Engine"
    - Click **Install**
 
-4. **Configure API Settings** (Required)
+4. **Configure Gold Pricing Settings** (Required)
 
-   After installation, configure the gold price API:
+   After installation, configure the module settings:
 
-   - Go to **Settings** → **Technical** → **Parameters** → **System Parameters**
-   - Create/Update the following parameters:
+   - Go to **Settings** → **Gold Pricing** (or search for "Gold Pricing" in Settings)
+   - Configure the following:
 
-     | Key | Value | Description |
-     |-----|-------|-------------|
-     | `gold_api_endpoint` | `https://your-api.com/gold/price` | Gold price API endpoint (required) |
-     | `gold_api_cookie` | `your-cookie-value` | API authentication cookie (required) |
+     **API Configuration:**
+     - **Gold API Endpoint**: URL endpoint for fetching gold prices
+     - **Gold API Cookie**: Cookie value for API authentication
+     - **Fallback Gold Price**: Price per gram when API is unavailable
+
+     **Markup per Gram by Gold Type:**
+     - **Jewellery (Local)**: Markup per gram for local jewellery
+     - **Jewellery (Foreign)**: Markup per gram for foreign jewellery
+     - **Bars**: Markup per gram for gold bars
+     - **Ingots**: Markup per gram for gold ingots
+     - **Coins**: Markup per gram for gold coins
 
    **Alternative**: Use Odoo shell to set parameters:
 
    ```python
+   # API Configuration
    self.env['ir.config_parameter'].sudo().set_param('gold_api_endpoint', 'https://your-api.com/gold/price')
    self.env['ir.config_parameter'].sudo().set_param('gold_api_cookie', 'your-cookie-value')
+   self.env['ir.config_parameter'].sudo().set_param('gold_pricing.fallback_price', '75.0')
+   
+   # Markup Configuration
+   self.env['ir.config_parameter'].sudo().set_param('gold_pricing.markup_jewellery_local', '5.0')
+   self.env['ir.config_parameter'].sudo().set_param('gold_pricing.markup_jewellery_foreign', '7.0')
+   self.env['ir.config_parameter'].sudo().set_param('gold_pricing.markup_bars', '3.0')
+   self.env['ir.config_parameter'].sudo().set_param('gold_pricing.markup_ingots', '4.0')
+   self.env['ir.config_parameter'].sudo().set_param('gold_pricing.markup_coins', '6.0')
    ```
 
 5. **Verify Cron Job**
@@ -110,16 +126,19 @@ gold_pricing/
 
    - **Gold Weight (grams)**: Enter the weight of gold in grams (required)
    - **Gold Purity**: Select purity level (24K, 21K, 18K, 14K, 10K) (required)
-   - **Gold Markup Value**: Enter fixed markup amount (required)
+   - **Gold Type**: Select type (Jewellery - Local, Jewellery - Foreign, Bars, Ingots, Coins) (required)
 
 4. **Automatic Calculations**
 
-   Once weight, purity, and markup are set:
+   Once weight, purity, and type are set:
+   - Markup per gram is retrieved from settings based on gold type
    - `gold_cost_price` = (GoldPricePerGram × purity_factor) × weight
-   - `markup_total` = markup × weight
+   - `markup_total` = markup_per_gram (from settings) × weight
    - `list_price` = cost_price + markup_total
    - `gold_min_sale_price` = cost_price + (markup_total × 0.5)
    - `standard_price` = cost_price
+
+   **Note**: Products missing weight, purity, or type will be skipped during price updates.
 
 ### Price Updates
 
@@ -141,16 +160,19 @@ self.env['gold.price.service'].update_all_gold_product_prices()
 The module enforces pricing rules at both backend and frontend levels:
 
 **Backend Validation** (Cannot be bypassed):
+
 - Validates order lines before order creation
 - Blocks orders with prices below `gold_min_sale_price`
 - Prevents discounts exceeding 50% of markup
 
 **Frontend Validation** (User experience):
+
 - Prevents setting prices below minimum
 - Limits discount percentage automatically
 - Shows clear error messages to POS users
 
 **Discount Rules**:
+
 - Maximum discount = 50% of markup value
 - Final price must be ≥ `gold_min_sale_price`
 - System automatically adjusts invalid discounts
@@ -160,6 +182,7 @@ The module enforces pricing rules at both backend and frontend levels:
 ### Expected API Response Format
 
 The module expects HTML/text responses with Arabic content. Expected pattern:
+
 ```
 علما بأن سعر البيع لجرام الذهب عيار 21 هو 5415 جنيها
 ```
@@ -171,11 +194,13 @@ Example: From the text above, it extracts `5415` as the 21K gold price per gram.
 ### API Authentication
 
 The module uses cookie-based authentication. Set `gold_api_cookie` parameter. The module will:
+
 - Send the cookie in the request headers
 - Include browser-like headers for compatibility
 - Parse HTML/text responses with Arabic text support
 
 Cookie format examples:
+
 - Single cookie: `session_id=abc123`
 - Multiple cookies: `session_id=abc123; auth_token=xyz789`
 
@@ -190,6 +215,7 @@ Cookie format examples:
 The module uses the following purity factors:
 
 | Purity | Factor | Description |
+
 |--------|--------|-------------|
 | 24K | 0.999 | 99.9% pure gold |
 | 21K | 0.875 | 87.5% pure gold |
@@ -247,6 +273,7 @@ The module uses the following purity factors:
 ### API Connection Issues
 
 1. **Test API Manually**
+
    ```bash
    curl -H "Cookie: YOUR_COOKIE" https://your-api.com/gold/price
    ```
@@ -282,6 +309,7 @@ Update purity factors in `_compute_gold_prices` and `update_gold_prices` methods
 **Modify Pricing Formula**:
 
 Edit calculation logic in:
+
 - `models/product_template.py` → `_compute_gold_prices()`
 - `models/product_template.py` → `update_gold_prices()`
 
@@ -322,6 +350,7 @@ Copyright (c) 2026 Revenax Digital Services, Mohamed A. Abdallah
 See [LICENSE](LICENSE) file for full terms and conditions.
 
 **Restrictions:**
+
 - No copying, modification, or distribution without explicit written permission
 - No reverse engineering or decompilation
 - No removal of copyright notices
@@ -335,7 +364,7 @@ See [LICENSE](LICENSE) file for full terms and conditions.
 
 **Mohamed A. Abdallah**  
 Revenax Digital Services  
-Website: https://www.revenax.com
+Website: <https://www.revenax.com/>
 
 ---
 
