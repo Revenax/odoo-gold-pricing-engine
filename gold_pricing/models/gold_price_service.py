@@ -58,10 +58,18 @@ class GoldPriceService(models.Model):
         )
         
         if not api_endpoint:
-            raise ValueError('GOLD_API_ENDPOINT is not configured. Please set gold_api_endpoint system parameter.')
+            raise ValueError(
+                'Gold API endpoint is not configured. '
+                'Please set the "gold_api_endpoint" system parameter in '
+                'Settings → Technical → Parameters → System Parameters'
+            )
         
         if not api_cookie:
-            raise ValueError('GOLD_API_COOKIE is not configured. Please set gold_api_cookie system parameter.')
+            raise ValueError(
+                'Gold API cookie is not configured. '
+                'Please set the "gold_api_cookie" system parameter in '
+                'Settings → Technical → Parameters → System Parameters'
+            )
         
         timeout = 10
         headers = {
