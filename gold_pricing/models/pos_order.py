@@ -40,8 +40,10 @@ class PosOrder(models.Model):
                         )
                     
                     # Check if discount exceeds 50% of markup
-                    if product.gold_markup_value > 0:
-                        max_discount_percent = (product.gold_markup_value * 0.5 / product.list_price) * 100
+                    # Markup total = markup per gram × weight
+                    if product.gold_markup_value > 0 and product.gold_weight_g > 0:
+                        markup_total = product.gold_markup_value * product.gold_weight_g
+                        max_discount_percent = (markup_total * 0.5 / product.list_price) * 100
                         if discount > max_discount_percent:
                             raise ValidationError(
                                 f'Discount for {product.name} cannot exceed '
