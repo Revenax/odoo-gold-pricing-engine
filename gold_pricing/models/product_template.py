@@ -30,10 +30,22 @@ class ProductTemplate(models.Model):
         help='Purity level of the gold product',
     )
     
+    gold_type = fields.Selection(
+        selection=[
+            ('jewellery_local', 'Jewellery - Local'),
+            ('jewellery_foreign', 'Jewellery - Foreign'),
+            ('bars', 'Bars'),
+            ('ingots', 'Ingots'),
+            ('coins', 'Coins'),
+        ],
+        string='Gold Type',
+        help='Type of gold product. Determines markup per gram from settings.',
+    )
+    
     gold_markup_value = fields.Float(
-        string='Gold Markup Value',
+        string='Gold Markup Value (Deprecated)',
         digits=(16, 4),
-        help='Fixed markup amount to add to cost price. Required for gold products.',
+        help='DEPRECATED: Markup is now set in Gold Pricing Settings per gold type.',
     )
     
     gold_cost_price = fields.Float(
@@ -65,11 +77,14 @@ class ProductTemplate(models.Model):
         for record in self:
             record.is_gold_product = bool(record.gold_weight_g and record.gold_weight_g > 0)
 
-    @api.depends('gold_weight_g', 'gold_purity', 'gold_markup_value')
+    @api.depends('gold_weight_g', 'gold_purity', 'gold_type')
     def _compute_gold_prices(self):
         """Compute gold cost price and minimum sale price"""
         gold_price_service = self.env['gold.price.service']
         base_gold_price = gold_price_service.get_current_gold_price()
+        
+        # Get markup from config
+        config = self.env['ir.config_parameter'].sudo()
         
         # Purity factors mapping
         purity_factors = {
@@ -81,7 +96,17 @@ class ProductTemplate(models.Model):
         }
         
         for record in self:
-            if not record.is_gold_product or not record.gold_purity:
+            if not record.is_gold_product or not record.gold_purity or not record.gold_type:
+                record.gold_cost_price = 0.0
+                record.gold_min_sale_price = 0.0
+                continue
+            
+            # Get markup per gram from settings based on gold type
+            markup_param_key = f'gold_pricing.markup_{record.gold_type}'
+            markup_per_gram = float(config.get_param(markup_param_key, '0.0'))
+            
+            if markup_per_gram <= 0:
+                # Skip if markup not configured for this type
                 record.gold_cost_price = 0.0
                 record.gold_min_sale_price = 0.0
                 continue
@@ -90,7 +115,7 @@ class ProductTemplate(models.Model):
             weight = Decimal(str(record.gold_weight_g or 0))
             base_price = Decimal(str(base_gold_price))
             purity_factor = Decimal(str(purity_factors.get(record.gold_purity, 0)))
-            markup = Decimal(str(record.gold_markup_value or 0))
+            markup = Decimal(str(markup_per_gram))
             
             # Calculate cost: GoldPricePerGram × weight (adjusted for purity)
             # GoldPricePerGram is adjusted by purity factor
@@ -117,28 +142,29 @@ class ProductTemplate(models.Model):
             record.gold_cost_price = float(cost)
             record.gold_min_sale_price = float(min_sale_price)
 
-    @api.constrains('gold_weight_g', 'gold_markup_value')
+    @api.constrains('gold_weight_g', 'gold_type', 'gold_purity')
     def _check_gold_required_fields(self):
-        """Ensure weight and markup are set for gold products"""
+        """Ensure required fields are set for gold products"""
         for record in self:
             if record.is_gold_product:
                 if not record.gold_weight_g or record.gold_weight_g <= 0:
                     raise ValidationError(
                         'Gold Weight (grams) is required and must be greater than 0 for gold products.'
                     )
-                if not record.gold_markup_value or record.gold_markup_value < 0:
-                    raise ValidationError(
-                        'Gold Markup Value is required and must be greater than or equal to 0 for gold products.'
-                    )
                 if not record.gold_purity:
                     raise ValidationError(
                         'Gold Purity is required for gold products.'
+                    )
+                if not record.gold_type:
+                    raise ValidationError(
+                        'Gold Type is required for gold products. Please select a type (Jewellery - Local, Jewellery - Foreign, Bars, Ingots, or Coins).'
                     )
 
     def update_gold_prices(self, base_gold_price):
         """
         Update product prices based on new gold price.
         Called by cron job for batch updates.
+        Skips products missing required data (weight, purity, type).
         
         :param base_gold_price: Current base gold price per gram
         """
@@ -153,21 +179,45 @@ class ProductTemplate(models.Model):
             '10K': 0.417,
         }
         
-        # Filter only gold products
-        gold_products = self.filtered(lambda p: p.is_gold_product and p.gold_purity)
+        # Get markup configuration
+        config = self.env['ir.config_parameter'].sudo()
+        
+        # Filter only gold products with all required data
+        gold_products = self.filtered(
+            lambda p: p.is_gold_product 
+            and p.gold_purity 
+            and p.gold_type 
+            and p.gold_weight_g 
+            and p.gold_weight_g > 0
+        )
         
         if not gold_products:
             return
         
         # Prepare batch update values
         update_values = []
+        skipped_count = 0
         
         for product in gold_products:
+            # Get markup per gram from settings based on gold type
+            markup_param_key = f'gold_pricing.markup_{product.gold_type}'
+            markup_per_gram = float(config.get_param(markup_param_key, '0.0'))
+            
+            # Skip if markup not configured for this type
+            if markup_per_gram <= 0:
+                skipped_count += 1
+                continue
+            
             # Use Decimal for precise calculations
             weight = Decimal(str(product.gold_weight_g))
             base_price = Decimal(str(base_gold_price))
-            purity_factor = Decimal(str(purity_factors[product.gold_purity]))
-            markup = Decimal(str(product.gold_markup_value))
+            purity_factor = Decimal(str(purity_factors.get(product.gold_purity, 0)))
+            markup = Decimal(str(markup_per_gram))
+            
+            # Skip if purity factor is invalid
+            if purity_factor <= 0:
+                skipped_count += 1
+                continue
             
             # Calculate cost: GoldPricePerGram × weight (adjusted for purity)
             # GoldPricePerGram is adjusted by purity factor
@@ -198,6 +248,15 @@ class ProductTemplate(models.Model):
                 'gold_cost_price': float(cost),
                 'gold_min_sale_price': float(min_sale_price),
             })
+        
+        # Log skipped products
+        if skipped_count > 0:
+            import logging
+            _logger = logging.getLogger(__name__)
+            _logger.warning(
+                'Skipped %d gold products due to missing data or unconfigured markup.',
+                skipped_count
+            )
         
         # Batch update using write
         for vals in update_values:
