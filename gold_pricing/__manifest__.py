@@ -30,9 +30,9 @@
     'data': [
         'security/ir.model.access.csv',
         'security/gold_pricing_security.xml',
-        'data/gold_pricing_cron.xml',
-        'views/product_template_views.xml',
         'views/gold_pricing_config_views.xml',
+        'views/product_template_views.xml',
+        'data/gold_pricing_cron.xml',
     ],
     'assets': {
         'point_of_sale.assets': [
@@ -44,4 +44,3 @@
     'auto_install': False,
     'license': 'OPL-1',
 }
-
