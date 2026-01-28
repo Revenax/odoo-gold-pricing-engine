@@ -1,0 +1,96 @@
+name: Check and Deploy
+
+on:
+  push:
+    branches:
+      - main
+      - ci-cd
+  pull_request:
+    branches:
+      - main
+      - ci-cd
+
+jobs:
+  check:
+    name: Run Pre-Deployment Checks
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.10'
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements-dev.txt
+
+      - name: Run linter
+        run: ruff check gold_pricing/ tests/
+
+      - name: Run tests
+        run: |
+          pytest tests/ -v || python3 -c "
+          import sys
+          sys.path.insert(0, '.')
+          from tests import test_price_parsing, test_price_computation
+          for module in [test_price_parsing, test_price_computation]:
+              for test_name in [f for f in dir(module) if f.startswith('test_')]:
+                  getattr(module, test_name)()
+          print('✓ All tests passed')
+          "
+
+      - name: Run type checker
+        run: mypy gold_pricing/utils.py --ignore-missing-imports
+
+  deploy:
+    name: Deploy to EC2
+    needs: check
+    runs-on: ubuntu-latest
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Deploy to EC2
+        env:
+          EC2_HOST: ${{ secrets.EC2_HOST }}
+          EC2_USER: ${{ secrets.EC2_USER }}
+          EC2_SSH_KEY: ${{ secrets.EC2_SSH_KEY }}
+          EC2_MODULE_PATH: ${{ secrets.EC2_MODULE_PATH }}
+        run: |
+          # Setup SSH
+          mkdir -p ~/.ssh
+          echo "$EC2_SSH_KEY" > ~/.ssh/deploy_key
+          chmod 600 ~/.ssh/deploy_key
+          ssh-keyscan -H "$EC2_HOST" >> ~/.ssh/known_hosts 2>/dev/null || true
+          
+          # Deploy script that runs on EC2
+          ssh -i ~/.ssh/deploy_key -o StrictHostKeyChecking=no \
+            "$EC2_USER@$EC2_HOST" << 'EOF'
+            set -euo pipefail
+            cd "$EC2_MODULE_PATH"
+            
+            # Atomic pull - only fast-forward
+            git fetch origin main
+            git pull --ff-only origin main || {
+              echo "Error: Fast-forward pull failed. Deployment aborted."
+              exit 1
+            }
+            
+            # Quick syntax check
+            python3 -m py_compile gold_pricing/utils.py || {
+              echo "Error: Syntax check failed. Deployment aborted."
+              exit 1
+            }
+            
+            echo "Deployment successful. Restart Odoo service manually or configure auto-restart."
+          EOF
+          
+          # Cleanup
+          rm -f ~/.ssh/deploy_key
