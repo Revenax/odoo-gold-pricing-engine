@@ -4,10 +4,11 @@
 # Website: https://www.revenax.com
 
 import logging
-import re
+
 import requests
-from odoo import models, fields, api
-from odoo.exceptions import UserError
+from odoo import models
+
+from ..utils import parse_gold_price_from_text  # noqa: E402
 
 _logger = logging.getLogger(__name__)
 
@@ -15,17 +16,18 @@ _logger = logging.getLogger(__name__)
 class GoldPriceService(models.Model):
     _name = 'gold.price.service'
     _description = 'Gold Price Service'
-    
+
     # Cache for current gold price
     _current_gold_price = None
     _price_cache_time = None
-    
+
     def get_current_gold_price(self):
         """
         Get current gold price from API or cache.
-        Returns price per gram in base currency.
-        
-        :return: float - Gold price per gram
+        Returns 21K gold price per gram in base currency.
+        Note: The API returns 21K price, which must be converted for other purities.
+
+        :return: float - 21K gold price per gram
         """
         # In production, implement proper caching with expiration
         # For now, fetch from API each time (cron will update frequently)
@@ -35,42 +37,51 @@ class GoldPriceService(models.Model):
             _logger.error('Failed to fetch gold price from API: %s', str(e))
             # Fallback to last known price from config or default
             return self._get_fallback_price()
-    
+
     def _fetch_gold_price_from_api(self):
         """
         Fetch gold price from external API using cookie authentication.
         Parses Arabic text response to extract 21K gold price.
-        
+
         Expected API response format (HTML/text with Arabic):
         "علما بأن سعر البيع لجرام الذهب عيار 21 هو 5415 جنيها"
         Extracts price after "الذهب عيار 21 هو "
-        
+
         :return: float - Gold price per gram (21K price)
         """
         api_endpoint = self.env['ir.config_parameter'].sudo().get_param(
             'gold_pricing.gold_api_endpoint',
             ''
         )
-        
+
         api_cookie = self.env['ir.config_parameter'].sudo().get_param(
             'gold_pricing.gold_api_cookie',
             ''
         )
-        
-        if not api_endpoint:
+
+        if not api_endpoint or not api_endpoint.strip():
             raise ValueError(
                 'Gold API endpoint is not configured. '
-                'Please set the "gold_api_endpoint" system parameter in '
+                'Please set the "gold_pricing.gold_api_endpoint" system parameter in '
                 'Settings → Technical → Parameters → System Parameters'
             )
-        
-        if not api_cookie:
+
+        if not api_cookie or not api_cookie.strip():
             raise ValueError(
                 'Gold API cookie is not configured. '
-                'Please set the "gold_api_cookie" system parameter in '
+                'Please set the "gold_pricing.gold_api_cookie" system parameter in '
                 'Settings → Technical → Parameters → System Parameters'
             )
-        
+
+        # Validate endpoint is a valid URL format
+        has_http = api_endpoint.startswith('http://')
+        has_https = api_endpoint.startswith('https://')
+        if not (has_http or has_https):
+            raise ValueError(
+                'Gold API endpoint must be a valid HTTP/HTTPS URL. '
+                f'Current value: {api_endpoint[:50]}...'
+            )
+
         timeout = 10
         headers = {
             'Cookie': api_cookie,
@@ -89,72 +100,83 @@ class GoldPriceService(models.Model):
             'sec-gpc': '1',
             'upgrade-insecure-requests': '1',
         }
-        
+
         try:
-            response = requests.get(api_endpoint, headers=headers, timeout=timeout)
+            response = requests.get(
+                api_endpoint,
+                headers=headers,
+                timeout=timeout
+            )
             response.raise_for_status()
-            
+
             # Parse as text/HTML (for Arabic text APIs)
             text = response.text
-            
-            # Parse Arabic text to extract 21K gold price
-            # Pattern: "علما بأن سعر البيع لجرام الذهب عيار 21 هو 5415 جنيها"
-            # Extract number after "الذهب عيار 21 هو "
-            match = re.search(r'(?<=الذهب عيار 21 هو )\d+', text)
-            
-            if match:
-                price = int(match.group(0))
-                if price <= 0:
-                    raise ValueError(f'Invalid price extracted: {price}')
-                # Return price as float (assuming price is per gram)
-                return float(price)
-            
-            # If no Arabic pattern found, try alternative patterns
-            # Try to find any number that might be a price
-            numbers = re.findall(r'\d+', text)
-            if numbers:
-                # Use the largest number found (likely the price)
-                potential_price = max([int(n) for n in numbers if len(n) >= 3])
-                if potential_price > 0:
-                    _logger.warning('Extracted price using fallback pattern: %s', potential_price)
-                    return float(potential_price)
-            
-            raise ValueError('Price not found in API response')
-            
+
+            # Use pure helper function to extract price
+            return parse_gold_price_from_text(text)
+
+        except requests.exceptions.Timeout as e:
+            _logger.error('API request timed out after %d seconds', timeout)
+            raise ValueError('Gold API request timed out. Please check network connectivity.') from e
+        except requests.exceptions.ConnectionError as e:
+            _logger.error('Failed to connect to gold API endpoint')
+            raise ValueError('Failed to connect to gold API. Please check endpoint configuration.') from e
+        except requests.exceptions.HTTPError as e:
+            _logger.error('API returned HTTP error: %d', e.response.status_code)
+            raise ValueError(f'Gold API returned error status {e.response.status_code}') from e
         except requests.exceptions.RequestException as e:
-            _logger.error('API request failed: %s', str(e))
-            raise
-        except (ValueError, KeyError, AttributeError) as e:
+            _logger.error('API request failed: %s', type(e).__name__)
+            raise ValueError('Gold API request failed. Please check configuration and network.') from e
+        except ValueError as e:
+            # Re-raise ValueError from parse_gold_price_from_text
             _logger.error('Invalid API response format: %s', str(e))
             raise
-    
+        except (KeyError, AttributeError) as e:
+            _logger.error('Unexpected error parsing API response: %s', type(e).__name__)
+            raise ValueError('Unexpected error while parsing gold API response.') from e
+
     def _get_fallback_price(self):
         """
         Get fallback gold price from system parameters.
         Used when API is unavailable.
-        
+
         :return: float - Fallback gold price per gram
+        :raises ValueError: If fallback price is invalid
         """
-        fallback_price = self.env['ir.config_parameter'].sudo().get_param(
+        fallback_price_str = self.env['ir.config_parameter'].sudo().get_param(
             'gold_pricing.fallback_price',
             '75.0'  # Default fallback price
         )
-        return float(fallback_price)
-    
+        try:
+            fallback_price = float(fallback_price_str)
+            if fallback_price <= 0:
+                _logger.warning(
+                    'Invalid fallback price configured: %s. Using default 75.0',
+                    fallback_price_str
+                )
+                return 75.0
+            return fallback_price
+        except (ValueError, TypeError):
+            _logger.warning(
+                'Invalid fallback price format: %s. Using default 75.0',
+                fallback_price_str
+            )
+            return 75.0
+
     def update_all_gold_product_prices(self):
         """
         Update prices for all gold products.
         Called by cron job every 10 minutes.
-        
+
         :return: dict - Execution summary
         """
         _logger.info('Starting gold price update for all products')
-        
+
         try:
             # Fetch current gold price
             base_gold_price = self._fetch_gold_price_from_api()
             _logger.info('Fetched gold price: %s per gram', base_gold_price)
-            
+
             # Get all gold products with required data
             # Only update products that have weight, purity, and type configured
             gold_products = self.env['product.template'].search([
@@ -163,7 +185,7 @@ class GoldPriceService(models.Model):
                 ('gold_type', '!=', False),
                 ('gold_weight_g', '>', 0),
             ])
-            
+
             if not gold_products:
                 _logger.info('No gold products found to update')
                 return {
@@ -172,32 +194,34 @@ class GoldPriceService(models.Model):
                     'base_price': base_gold_price,
                     'message': 'No gold products found',
                 }
-            
+
             # Update prices in batches for performance
             batch_size = 100
             total_updated = 0
-            
+
             for i in range(0, len(gold_products), batch_size):
                 batch = gold_products[i:i + batch_size]
                 batch.update_gold_prices(base_gold_price)
                 total_updated += len(batch)
-                _logger.info('Updated batch: %d products (total: %d)', len(batch), total_updated)
-            
+                _logger.info('Updated batch: %d products (total: %d)',
+                             len(batch), total_updated)
+
             _logger.info(
                 'Gold price update completed: %d products updated with base price %s',
                 total_updated,
                 base_gold_price
             )
-            
+
             return {
                 'success': True,
                 'products_updated': total_updated,
                 'base_price': base_gold_price,
                 'message': f'Successfully updated {total_updated} products',
             }
-            
+
         except Exception as e:
-            _logger.error('Gold price update failed: %s', str(e), exc_info=True)
+            _logger.error('Gold price update failed: %s',
+                          str(e), exc_info=True)
             return {
                 'success': False,
                 'products_updated': 0,
@@ -205,4 +229,3 @@ class GoldPriceService(models.Model):
                 'message': f'Update failed: {str(e)}',
                 'error': str(e),
             }
-

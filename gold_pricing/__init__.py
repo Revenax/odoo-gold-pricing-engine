@@ -3,5 +3,5 @@
 # Author: Mohamed A. Abdallah
 # Website: https://www.revenax.com
 
-from . import models
+from . import models  # noqa: F401
 

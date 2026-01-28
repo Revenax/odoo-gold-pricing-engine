@@ -6,13 +6,13 @@
     'description': """
         Gold Pricing Engine for Jewelry Business
         =========================================
-        
+
         This module provides:
         * Automated gold price updates from external API (every 10 minutes)
         * Product pricing based on weight, purity, and markup
         * POS price enforcement to prevent sales below minimum price
         * Real-time cost and sale price calculations
-        
+
         Features:
         - Extends product.template with gold-specific fields
         - Automatic price updates via cron job
