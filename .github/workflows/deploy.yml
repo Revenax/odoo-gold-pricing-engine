@@ -91,12 +91,14 @@ jobs:
           ssh-keyscan -H "$EC2_HOST" >> ~/.ssh/known_hosts 2>/dev/null || true
           
           # Deploy script that runs on EC2
+          # Pass EC2_MODULE_PATH as environment variable to remote session
           ssh -i ~/.ssh/deploy_key \
             -o StrictHostKeyChecking=no \
             -o UserKnownHostsFile=~/.ssh/known_hosts \
-            "${EC2_USER}@${EC2_HOST}" bash << 'EOF'
+            "${EC2_USER}@${EC2_HOST}" bash << EOF
             set -euo pipefail
-            cd "${EC2_MODULE_PATH}"
+            MODULE_PATH="${EC2_MODULE_PATH}"
+            cd "\${MODULE_PATH}"
             
             # Atomic pull - only fast-forward
             git fetch origin main
