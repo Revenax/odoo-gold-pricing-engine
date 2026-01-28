@@ -64,6 +64,26 @@ jobs:
           EC2_SSH_KEY: ${{ secrets.EC2_SSH_KEY }}
           EC2_MODULE_PATH: ${{ secrets.EC2_MODULE_PATH }}
         run: |
+          set -euo pipefail
+          
+          # Validate required secrets are set
+          if [ -z "${EC2_HOST:-}" ]; then
+            echo "Error: EC2_HOST secret is not set"
+            exit 1
+          fi
+          if [ -z "${EC2_USER:-}" ]; then
+            echo "Error: EC2_USER secret is not set"
+            exit 1
+          fi
+          if [ -z "${EC2_SSH_KEY:-}" ]; then
+            echo "Error: EC2_SSH_KEY secret is not set"
+            exit 1
+          fi
+          if [ -z "${EC2_MODULE_PATH:-}" ]; then
+            echo "Error: EC2_MODULE_PATH secret is not set"
+            exit 1
+          fi
+          
           # Setup SSH
           mkdir -p ~/.ssh
           echo "$EC2_SSH_KEY" > ~/.ssh/deploy_key
@@ -71,10 +91,14 @@ jobs:
           ssh-keyscan -H "$EC2_HOST" >> ~/.ssh/known_hosts 2>/dev/null || true
           
           # Deploy script that runs on EC2
-          ssh -i ~/.ssh/deploy_key -o StrictHostKeyChecking=no \
-            "$EC2_USER@$EC2_HOST" << 'EOF'
+          # Pass EC2_MODULE_PATH as environment variable to remote session
+          ssh -i ~/.ssh/deploy_key \
+            -o StrictHostKeyChecking=no \
+            -o UserKnownHostsFile=~/.ssh/known_hosts \
+            "${EC2_USER}@${EC2_HOST}" bash << EOF
             set -euo pipefail
-            cd "$EC2_MODULE_PATH"
+            MODULE_PATH="${EC2_MODULE_PATH}"
+            cd "\${MODULE_PATH}"
             
             # Atomic pull - only fast-forward
             git fetch origin main
