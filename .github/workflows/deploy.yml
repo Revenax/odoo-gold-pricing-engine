@@ -98,7 +98,40 @@ jobs:
             "${EC2_USER}@${EC2_HOST}" bash << EOF
             set -euo pipefail
             MODULE_PATH="${EC2_MODULE_PATH}"
-            cd "\${MODULE_PATH}"
+            
+            # Validate and navigate to module path
+            echo "Deploying to: \${MODULE_PATH}"
+            if [ ! -d "\${MODULE_PATH}" ]; then
+              echo "Error: Module path does not exist: \${MODULE_PATH}"
+              echo "Current directory: \$(pwd)"
+              echo "Listing parent directory:"
+              ls -la "\$(dirname "\${MODULE_PATH}")" || true
+              exit 1
+            fi
+            
+            if [ ! -r "\${MODULE_PATH}" ]; then
+              echo "Error: No read permission for: \${MODULE_PATH}"
+              echo "Current user: \$(whoami)"
+              echo "Directory permissions:"
+              ls -ld "\${MODULE_PATH}" || true
+              exit 1
+            fi
+            
+            if [ ! -w "\${MODULE_PATH}" ]; then
+              echo "Error: No write permission for: \${MODULE_PATH}"
+              echo "Current user: \$(whoami)"
+              echo "Directory permissions:"
+              ls -ld "\${MODULE_PATH}" || true
+              exit 1
+            fi
+            
+            cd "\${MODULE_PATH}" || {
+              echo "Error: Failed to change directory to: \${MODULE_PATH}"
+              echo "Current directory: \$(pwd)"
+              exit 1
+            }
+            
+            echo "Successfully changed to: \$(pwd)"
             
             # Atomic pull - only fast-forward
             git fetch origin main
