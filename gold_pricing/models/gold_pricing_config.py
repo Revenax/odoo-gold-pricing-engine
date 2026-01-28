@@ -3,7 +3,7 @@
 # Author: Mohamed A. Abdallah
 # Website: https://www.revenax.com
 
-from odoo import models, fields, api
+from odoo import fields, models
 
 
 class ResConfigSettings(models.TransientModel):
