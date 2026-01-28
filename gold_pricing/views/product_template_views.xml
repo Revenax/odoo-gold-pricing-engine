@@ -6,14 +6,18 @@
         <field name="inherit_id" ref="product.product_template_form_view"/>
         <field name="arch" type="xml">
             <!-- Add gold pricing fields to the form view -->
-            <xpath expr="//field[@name='standard_price']" position="after">
-                <group string="Gold Pricing" col="4" invisible="not is_gold_product">
+            <xpath expr="//field[@name='standard_price']" position="inside">
+                <group string="Gold Pricing">
                     <field name="is_gold_product" invisible="1"/>
-                    <field name="gold_weight_g" required="is_gold_product"/>
-                    <field name="gold_purity" required="is_gold_product"/>
-                    <field name="gold_type" required="is_gold_product"/>
-                    <field name="gold_cost_price" readonly="1" groups="base.group_system"/>
-                    <field name="gold_min_sale_price" readonly="1"/>
+                    <group col="3">
+                        <field name="gold_weight_g"/>
+                        <field name="gold_purity"/>
+                        <field name="gold_type"/>
+                    </group>
+                    <group invisible="not is_gold_product">
+                        <field name="gold_cost_price" readonly="1" groups="base.group_system"/>
+                        <field name="gold_min_sale_price" readonly="1"/>
+                    </group>
                 </group>
             </xpath>
         </field>

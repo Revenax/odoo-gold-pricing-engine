@@ -18,12 +18,15 @@ This module provides comprehensive gold product pricing management for jewelry b
 gold_pricing/
 ├── __init__.py
 ├── __manifest__.py
+├── utils.py                      # Pure helper functions (price parsing, computation)
 ├── models/
 │   ├── __init__.py
 │   ├── product_template.py      # Product model extensions
 │   ├── gold_price_service.py    # API service and cron logic
+│   ├── gold_pricing_config.py  # Configuration settings
 │   └── pos_order.py             # POS backend validation
 ├── views/
+│   ├── gold_pricing_config_views.xml
 │   └── product_template_views.xml
 ├── security/
 │   ├── ir.model.access.csv
@@ -285,6 +288,90 @@ The module uses the following purity factors:
 3. **Review Network Settings**
    - Ensure Odoo server can reach API endpoint
    - Check firewall rules
+
+## Pre-Deployment Checks
+
+Before deploying to production, run the automated checks to ensure code quality:
+
+### Quick Start
+
+1. **Install development dependencies:**
+   ```bash
+   make install-dev
+   # or
+   pip install -r requirements-dev.txt
+   ```
+
+2. **Install git hooks (recommended):**
+   ```bash
+   ./scripts/install-git-hooks.sh
+   ```
+   This installs a pre-push hook that automatically runs checks before pushing.
+
+3. **Run all checks manually:**
+   ```bash
+   make check
+   # or
+   ./scripts/pre_deploy_check.sh
+   ```
+
+### What Gets Checked
+
+- **Linting**: Code style and common errors (via `ruff`)
+- **Tests**: Unit tests for price parsing and computation logic (via `pytest`)
+- **Type Checking**: Type annotations validation (via `mypy`)
+
+### Manual Deployment Workflow
+
+1. Make your changes locally
+2. Run `make check` to verify everything passes
+3. Commit and push to `main` branch
+4. SSH into EC2 instance
+5. Navigate to module directory: `cd /path/to/odoo/addons/gold_pricing`
+6. Pull latest changes: `git pull origin main`
+7. Restart Odoo service (method depends on your setup)
+
+### Automated Deployment (CI/CD)
+
+The repository includes a GitHub Actions workflow (`.github/workflows/deploy.yml`) that:
+1. Runs all checks on every push and pull request
+2. Automatically deploys to EC2 when checks pass on `main` branch
+
+#### Setup Instructions
+
+1. **Configure GitHub Secrets** (Settings → Secrets and variables → Actions):
+   - `EC2_HOST`: Your EC2 instance hostname or IP (e.g., `ec2-xxx.compute.amazonaws.com`)
+   - `EC2_USER`: SSH username (e.g., `ec2-user`, `ubuntu`, `admin`)
+   - `EC2_SSH_KEY`: Private SSH key content for EC2 access
+   - `EC2_MODULE_PATH`: Full path to module on EC2 (e.g., `/opt/odoo/addons/gold_pricing`)
+
+2. **Generate SSH Key** (if needed):
+   ```bash
+   ssh-keygen -t ed25519 -C "github-actions-deploy" -f ~/.ssh/github_deploy
+   # Add public key to EC2: ~/.ssh/github_deploy.pub → ~/.ssh/authorized_keys on EC2
+   # Add private key to GitHub Secrets: EC2_SSH_KEY
+   ```
+
+3. **Test the Workflow**:
+   - Push a small change to `main`
+   - Check Actions tab in GitHub to see deployment progress
+   - Verify deployment on EC2
+
+#### Deployment Process
+
+The automated deployment:
+- ✅ Runs all pre-deployment checks first
+- ✅ Only deploys if all checks pass
+- ✅ Uses `git pull --ff-only` for atomic updates (prevents conflicts)
+- ✅ Validates Python syntax before completing
+- ⚠️ **Requires manual Odoo restart** (configure auto-restart if desired)
+
+#### Disabling Auto-Deploy
+
+To disable automatic deployment but keep checks:
+- Edit `.github/workflows/deploy.yml`
+- Comment out or remove the `deploy` job
+- Checks will still run on every push/PR
 
 ## Development
 
