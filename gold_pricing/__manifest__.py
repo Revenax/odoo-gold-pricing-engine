@@ -6,6 +6,7 @@
     'description': """
         Gold Pricing Engine for Jewelry Business
         =========================================
+        Version: 17.0.1.0.0
 
         This module provides:
         * Automated gold price updates from external API (every 10 minutes)
