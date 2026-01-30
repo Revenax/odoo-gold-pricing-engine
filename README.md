@@ -312,7 +312,7 @@ Before deploying to production, run the automated checks to ensure code quality:
    ```bash
    make check
    # or
-   ./scripts/pre_deploy_check.sh
+   ./scripts/ci.sh
    ```
 
 ### What Gets Checked

@@ -12,50 +12,30 @@ on:
 
 jobs:
   check:
-    name: Run Pre-Deployment Checks
+    name: CI
     runs-on: ubuntu-latest
-    
     steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
+      - uses: actions/checkout@v4
 
-      - name: Set up Python
-        uses: actions/setup-python@v5
+      - uses: actions/setup-python@v5
         with:
-          python-version: '3.10'
+          python-version: "3.10"
 
       - name: Install dependencies
         run: |
           python -m pip install --upgrade pip
           pip install -r requirements-dev.txt
 
-      - name: Run linter
-        run: ruff check gold_pricing/ tests/
-
-      - name: Run tests
-        run: |
-          pytest tests/ -v || python3 -c "
-          import sys
-          sys.path.insert(0, '.')
-          from tests import test_price_parsing, test_price_computation
-          for module in [test_price_parsing, test_price_computation]:
-              for test_name in [f for f in dir(module) if f.startswith('test_')]:
-                  getattr(module, test_name)()
-          print('✓ All tests passed')
-          "
-
-      - name: Run type checker
-        run: mypy gold_pricing/utils.py --ignore-missing-imports
+      - name: Run checks
+        run: ./scripts/ci.sh
 
   deploy:
     name: Deploy to EC2
     needs: check
     runs-on: ubuntu-latest
     if: github.event_name == 'push' && github.ref == 'refs/heads/main'
-    
     steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
+      - uses: actions/checkout@v4
 
       - name: Deploy to EC2
         env:
@@ -65,56 +45,14 @@ jobs:
           EC2_MODULE_PATH: ${{ secrets.EC2_MODULE_PATH }}
         run: |
           set -euo pipefail
-          
-          # Validate required secrets are set
-          if [ -z "${EC2_HOST:-}" ]; then
-            echo "Error: EC2_HOST secret is not set"
-            exit 1
-          fi
-          if [ -z "${EC2_USER:-}" ]; then
-            echo "Error: EC2_USER secret is not set"
-            exit 1
-          fi
-          if [ -z "${EC2_SSH_KEY:-}" ]; then
-            echo "Error: EC2_SSH_KEY secret is not set"
-            exit 1
-          fi
-          if [ -z "${EC2_MODULE_PATH:-}" ]; then
-            echo "Error: EC2_MODULE_PATH secret is not set"
-            exit 1
-          fi
-          
-          # Setup SSH
+          for var in EC2_HOST EC2_USER EC2_SSH_KEY EC2_MODULE_PATH; do
+            eval "val=\${$var:-}"
+            if [ -z "$val" ]; then echo "Error: $var secret is not set"; exit 1; fi
+          done
           mkdir -p ~/.ssh
           echo "$EC2_SSH_KEY" > ~/.ssh/deploy_key
           chmod 600 ~/.ssh/deploy_key
           ssh-keyscan -H "$EC2_HOST" >> ~/.ssh/known_hosts 2>/dev/null || true
-          
-          # Deploy script that runs on EC2
-          # Pass EC2_MODULE_PATH as environment variable to remote session
-          ssh -i ~/.ssh/deploy_key \
-            -o StrictHostKeyChecking=no \
-            -o UserKnownHostsFile=~/.ssh/known_hosts \
-            "${EC2_USER}@${EC2_HOST}" bash << EOF
-            set -euo pipefail
-            MODULE_PATH="${EC2_MODULE_PATH}"
-            cd "\${MODULE_PATH}"
-            
-            # Atomic pull - only fast-forward
-            git fetch origin main
-            git pull --ff-only origin main || {
-              echo "Error: Fast-forward pull failed. Deployment aborted."
-              exit 1
-            }
-            
-            # Quick syntax check
-            python3 -m py_compile gold_pricing/utils.py || {
-              echo "Error: Syntax check failed. Deployment aborted."
-              exit 1
-            }
-            
-            echo "Deployment successful. Restart Odoo service manually or configure auto-restart."
-          EOF
-          
-          # Cleanup
+          ssh -i ~/.ssh/deploy_key -o StrictHostKeyChecking=no -o UserKnownHostsFile=~/.ssh/known_hosts \
+            "${EC2_USER}@${EC2_HOST}" "MODULE_PATH='${EC2_MODULE_PATH}' bash -s" < scripts/remote-deploy.sh
           rm -f ~/.ssh/deploy_key

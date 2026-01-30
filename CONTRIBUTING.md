@@ -82,7 +82,7 @@ To skip the hook (not recommended): `git push --no-verify`
 
 Before committing code:
 
-1. Run `make check` or `./scripts/pre_deploy_check.sh`
+1. Run `make check` or `./scripts/ci.sh`
 2. Ensure all tests pass
 3. Verify no sensitive data is committed
 4. Check that error messages are user-friendly
@@ -93,7 +93,7 @@ Note: If you've installed git hooks, checks will run automatically on push.
 ## Git Workflow
 
 1. Make changes on a feature branch
-2. Run pre-deployment checks locally
+2. Run CI checks locally (`make check` or `./scripts/ci.sh`)
 3. Commit with clear, descriptive messages
 4. Push to GitHub
 5. Create pull request (if not working directly on main)
@@ -104,4 +104,4 @@ Note: If you've installed git hooks, checks will run automatically on push.
 - Only deploy from `main` branch
 - All checks must pass before deployment
 - Use atomic `git pull --ff-only` for deployments
-- Never skip pre-deployment checks
+- Never skip CI checks
