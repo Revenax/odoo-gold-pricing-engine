@@ -13,9 +13,11 @@ cleanup() { rm -f "$KEY_FILE"; }
 trap cleanup EXIT
 
 cd "$PROJECT_ROOT"
+ENV_FILE="$PROJECT_ROOT/.env"
 
-# Load .env (supports multi-line EC2_SSH_KEY: lines after EC2_SSH_KEY= until next VAR= are appended)
-if [ -f .env ]; then
+# Load .env from repo root (absolute path so it works with sudo)
+# Supports multi-line EC2_SSH_KEY: lines after EC2_SSH_KEY= until next VAR= are appended
+if [ -f "$ENV_FILE" ]; then
   current_key=""
   while IFS= read -r line; do
     [[ "$line" =~ ^# ]] && continue
@@ -34,7 +36,7 @@ if [ -f .env ]; then
     else
       [[ -n "$current_key" ]] && current_key="$current_key"$'\n'"$line"
     fi
-  done < .env
+  done < "$ENV_FILE"
   [[ -n "$current_key" ]] && export EC2_SSH_KEY="$current_key"
 fi
 
@@ -47,6 +49,13 @@ for var in EC2_HOST EC2_USER EC2_MODULE_PATH; do
   eval "val=\${$var:-}"
   if [ -z "$val" ]; then echo "Error: $var is not set"; exit 1; fi
 done
+
+GIT_REPO_PATH="${EC2_GIT_REPO_PATH:-$EC2_MODULE_PATH}"
+DEPLOY_TARGET="$EC2_MODULE_PATH"
+
+if [ "$GIT_REPO_PATH" = "$DEPLOY_TARGET" ]; then
+  echo "Warning: GIT_REPO_PATH and DEPLOY_TARGET are the same. Set EC2_GIT_REPO_PATH in .env if repo and module are in different dirs."
+fi
 
 # Check required commands (standard on macOS/Linux)
 for cmd in ssh ssh-keygen; do
@@ -85,6 +94,6 @@ ssh -i "$KEY_FILE" \
   -o ServerAliveInterval=10 \
   -o ServerAliveCountMax=3 \
   "${EC2_USER}@${EC2_HOST}" \
-  "MODULE_PATH='${EC2_MODULE_PATH}' bash -s" < scripts/remote-deploy.sh
+  "GIT_REPO_PATH='${GIT_REPO_PATH}' DEPLOY_TARGET='${DEPLOY_TARGET}' bash -s" < scripts/remote-deploy.sh
 
 echo "Local deploy finished successfully."
