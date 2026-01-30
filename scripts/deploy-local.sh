@@ -52,7 +52,6 @@ done
 
 GIT_REPO_PATH="${EC2_GIT_REPO_PATH:-$EC2_MODULE_PATH}"
 DEPLOY_TARGET="$EC2_MODULE_PATH"
-ODOO_RESTART_CMD="${EC2_ODOO_RESTART_CMD:-}"
 
 if [ "$GIT_REPO_PATH" = "$DEPLOY_TARGET" ]; then
   echo "Warning: GIT_REPO_PATH and DEPLOY_TARGET are the same. Set EC2_GIT_REPO_PATH in .env if repo and module are in different dirs."
@@ -95,6 +94,6 @@ ssh -i "$KEY_FILE" \
   -o ServerAliveInterval=10 \
   -o ServerAliveCountMax=3 \
   "${EC2_USER}@${EC2_HOST}" \
-  "GIT_REPO_PATH='${GIT_REPO_PATH}' DEPLOY_TARGET='${DEPLOY_TARGET}' ODOO_RESTART_CMD='${ODOO_RESTART_CMD}' bash -s" < scripts/remote-deploy.sh
+  "GIT_REPO_PATH='${GIT_REPO_PATH}' DEPLOY_TARGET='${DEPLOY_TARGET}' bash -s" < scripts/remote-deploy.sh
 
 echo "Local deploy finished successfully."

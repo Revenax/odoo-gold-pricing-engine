@@ -38,12 +38,12 @@ if [ "$GIT_REPO_PATH" != "$DEPLOY_TARGET" ]; then
   cp -a "$GIT_REPO_PATH/gold_pricing" "$(dirname "$DEPLOY_TARGET")/"
 fi
 
-if [ -n "${ODOO_RESTART_CMD:-}" ]; then
-  echo "Restarting Odoo: $ODOO_RESTART_CMD"
-  eval "$ODOO_RESTART_CMD" || { echo "Error: Odoo restart failed"; exit 1; }
-  echo "Odoo restarted."
-else
-  echo "Odoo restart skipped (ODOO_RESTART_CMD not set). Restart manually if needed."
-fi
+echo "Upgrading module: gold_pricing"
+sudo -u odoo odoo -u gold_pricing --stop-after-init -c /etc/odoo.conf || { echo "Error: Odoo upgrade failed"; exit 1; }
+echo "Module upgraded."
+
+echo "Restarting Odoo"
+sudo systemctl restart odoo || { echo "Error: Odoo restart failed"; exit 1; }
+echo "Odoo restarted."
 
 echo "Deployment successful."
