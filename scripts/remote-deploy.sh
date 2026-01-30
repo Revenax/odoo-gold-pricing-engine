@@ -38,4 +38,12 @@ if [ "$GIT_REPO_PATH" != "$DEPLOY_TARGET" ]; then
   cp -a "$GIT_REPO_PATH/gold_pricing" "$(dirname "$DEPLOY_TARGET")/"
 fi
 
-echo "Deployment successful. Restart Odoo service manually or configure auto-restart."
+if [ -n "${ODOO_RESTART_CMD:-}" ]; then
+  echo "Restarting Odoo: $ODOO_RESTART_CMD"
+  eval "$ODOO_RESTART_CMD" || { echo "Error: Odoo restart failed"; exit 1; }
+  echo "Odoo restarted."
+else
+  echo "Odoo restart skipped (ODOO_RESTART_CMD not set). Restart manually if needed."
+fi
+
+echo "Deployment successful."

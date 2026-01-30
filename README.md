@@ -345,6 +345,17 @@ The repository includes a GitHub Actions workflow (`.github/workflows/deploy.yml
    - `EC2_SSH_KEY`: Private SSH key content for EC2 access
    - `EC2_MODULE_PATH`: Path where Odoo expects the module (deploy target), e.g. `/opt/odoo/custom-addons/gold_pricing`
    - `EC2_GIT_REPO_PATH` (optional): Path to the git repo on the server if different from the module path, e.g. `/opt/odoo/custom-addons/odoo-gold-pricing-engine`. If unset, `EC2_MODULE_PATH` is used for both pull and deploy (repo and module in the same place).
+   - `EC2_ODOO_RESTART_CMD` (optional): Command to restart Odoo after deploy, e.g. `sudo systemctl restart odoo`. If unset, Odoo is not restarted automatically (restart manually). The deploy user must have passwordless sudo for this command (see below).
+
+   **Auto-restart (sudoers):** On the EC2 instance, allow the deploy user to restart Odoo without a password:
+   ```bash
+   sudo visudo
+   ```
+   Add this line (adjust `ubuntu` and `odoo` if your user or service name differs):
+   ```
+   ubuntu ALL=(ALL) NOPASSWD: /bin/systemctl restart odoo
+   ```
+   Save and exit. Then set `EC2_ODOO_RESTART_CMD=sudo systemctl restart odoo` in GitHub Secrets and/or `.env`.
 
 2. **Give the deploy user access to both paths** (avoids "Permission denied" on `cd`):
    CI runs as `EC2_USER` (e.g. `ubuntu`) and must be able to `cd` into the **git repo path** (pull) and write to the **deploy target** (copy). **Recommended: fix permissions** (no sudo in the pipeline).
@@ -379,7 +390,7 @@ The automated deployment:
 - ✅ Pulls in the git repo path, then copies `gold_pricing/` to the deploy target (when repo path ≠ module path)
 - ✅ Uses `git pull --ff-only` for atomic updates (prevents conflicts)
 - ✅ Validates Python syntax before completing
-- ⚠️ **Requires manual Odoo restart** (configure auto-restart if desired)
+- ✅ Restarts Odoo automatically if `EC2_ODOO_RESTART_CMD` is set (e.g. `sudo systemctl restart odoo`); otherwise restart manually
 
 #### Disabling Auto-Deploy
 

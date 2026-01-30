@@ -44,6 +44,7 @@ jobs:
           EC2_SSH_KEY: ${{ secrets.EC2_SSH_KEY }}
           EC2_MODULE_PATH: ${{ secrets.EC2_MODULE_PATH }}
           EC2_GIT_REPO_PATH: ${{ secrets.EC2_GIT_REPO_PATH }}
+          EC2_ODOO_RESTART_CMD: ${{ secrets.EC2_ODOO_RESTART_CMD }}
         run: |
           set -euo pipefail
           for var in EC2_HOST EC2_USER EC2_SSH_KEY EC2_MODULE_PATH; do
@@ -52,10 +53,11 @@ jobs:
           done
           GIT_REPO_PATH="${EC2_GIT_REPO_PATH:-$EC2_MODULE_PATH}"
           DEPLOY_TARGET="$EC2_MODULE_PATH"
+          ODOO_RESTART_CMD="${EC2_ODOO_RESTART_CMD:-}"
           mkdir -p ~/.ssh
           echo "$EC2_SSH_KEY" > ~/.ssh/deploy_key
           chmod 600 ~/.ssh/deploy_key
           ssh-keyscan -H "$EC2_HOST" >> ~/.ssh/known_hosts 2>/dev/null || true
           ssh -i ~/.ssh/deploy_key -o StrictHostKeyChecking=no -o UserKnownHostsFile=~/.ssh/known_hosts \
-            "${EC2_USER}@${EC2_HOST}" "GIT_REPO_PATH='${GIT_REPO_PATH}' DEPLOY_TARGET='${DEPLOY_TARGET}' bash -s" < scripts/remote-deploy.sh
+            "${EC2_USER}@${EC2_HOST}" "GIT_REPO_PATH='${GIT_REPO_PATH}' DEPLOY_TARGET='${DEPLOY_TARGET}' ODOO_RESTART_CMD='${ODOO_RESTART_CMD}' bash -s" < scripts/remote-deploy.sh
           rm -f ~/.ssh/deploy_key
