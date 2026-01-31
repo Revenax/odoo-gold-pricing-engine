@@ -38,7 +38,8 @@ patch(Orderline.prototype, {
     // Calculate markup total from list price and cost price
     // markup_total = list_price - cost_price
     const markupTotal = listPrice - costPrice;
-    const maxDiscountPercent = ((markupTotal * 0.5) / listPrice) * 100;
+    const maxDiscountPercent =
+      listPrice > 0 ? ((markupTotal * 0.5) / listPrice) * 100 : 0;
     const clampedDiscount = Math.min(discount, maxDiscountPercent);
     const finalPrice = currentPrice * (1 - clampedDiscount / 100.0);
 
@@ -164,7 +165,8 @@ patch(ProductScreen.prototype, {
       if (minSalePrice > 0 && costPrice > 0) {
         // Calculate markup total from list price and cost price
         const markupTotal = listPrice - costPrice;
-        const maxDiscountPercent = ((markupTotal * 0.5) / listPrice) * 100;
+        const maxDiscountPercent =
+          listPrice > 0 ? ((markupTotal * 0.5) / listPrice) * 100 : 0;
         const maxDiscountForMinPrice =
           ((currentPrice - minSalePrice) / currentPrice) * 100;
         const actualMaxDiscount = Math.min(

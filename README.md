@@ -143,6 +143,20 @@ gold_pricing/
 
    **Note**: Products missing weight, purity, or type will be skipped during price updates.
 
+### Mass Import and Export
+
+Gold fields are standard `product.template` fields and are available in Odoo’s import/export tools by default.
+
+**Recommended columns for import** (product template):
+- `gold_weight_g`
+- `gold_purity` (use technical values like `24K`, `21K`, `18K`, `14K`, `10K`)
+- `gold_type` (use technical values like `jewellery_local`, `jewellery_foreign`, `bars`, `ingots`, `coins`)
+
+**Computed fields** (exportable but should not be imported):
+- `gold_cost_price`
+- `gold_min_sale_price`
+- `is_gold_product`
+
 ### Price Updates
 
 Prices are automatically updated every 10 minutes via cron job:

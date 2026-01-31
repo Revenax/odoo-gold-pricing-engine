@@ -38,7 +38,7 @@ class PosOrder(models.Model):
                             product.gold_type,
                         )
 
-                        if markup_per_gram > 0:
+                        if markup_per_gram > 0 and product.list_price > 0:
                             markup_total = markup_per_gram * product.gold_weight_g
                             max_discount_percent = (
                                 markup_total * 0.5 / product.list_price
