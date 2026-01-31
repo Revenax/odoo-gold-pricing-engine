@@ -7,8 +7,16 @@
         <field name="arch" type="xml">
             <xpath expr="//form" position="inside">
                 <div class="app_settings_block" data-string="Gold Pricing" data-key="gold_pricing">
-                    <h2>Gold Pricing Configuration</h2>
                     <div class="row mt16 o_settings_container">
+                        <div class="col-12 o_setting_box">
+                            <div class="o_setting_left_pane"/>
+                            <div class="o_setting_right_pane">
+                                <span class="o_form_label">Gold Pricing</span>
+                                <div class="text-muted">
+                                    Configure the API source and pricing rules for gold products.
+                                </div>
+                            </div>
+                        </div>
                         <div class="col-12 col-lg-6 o_setting_box">
                             <div class="o_setting_left_pane">
                                 <field name="gold_api_endpoint"/>
@@ -43,8 +51,16 @@
                             </div>
                         </div>
                     </div>
-                    <h3 class="mt16">Markup per Gram by Gold Type</h3>
                     <div class="row mt16 o_settings_container">
+                        <div class="col-12 o_setting_box">
+                            <div class="o_setting_left_pane"/>
+                            <div class="o_setting_right_pane">
+                                <span class="o_form_label">Markup per Gram</span>
+                                <div class="text-muted">
+                                    Set per-gram markup based on gold type.
+                                </div>
+                            </div>
+                        </div>
                         <div class="col-12 col-lg-6 o_setting_box">
                             <div class="o_setting_left_pane">
                                 <field name="markup_jewellery_local"/>
