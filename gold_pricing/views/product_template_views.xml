@@ -22,6 +22,16 @@
                     </group>
                 </page>
             </xpath>
+            <xpath expr="//notebook" position="inside">
+                <page string="Diamond">
+                    <group>
+                        <field name="is_diamond_product" invisible="1"/>
+                        <group col="2">
+                            <field name="diamond_usd_price"/>
+                        </group>
+                    </group>
+                </page>
+            </xpath>
         </field>
     </record>
     

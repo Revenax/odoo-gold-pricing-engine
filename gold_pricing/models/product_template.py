@@ -36,6 +36,7 @@ class ProductTemplate(models.Model):
     VALID_GOLD_TYPES = {item[0] for item in GOLD_TYPE_SELECTION}
     MAX_GOLD_WEIGHT_G = 100000
     GOLD_PRICE_UPDATE_FIELDS = {'gold_weight_g', 'gold_purity', 'gold_type'}
+    DIAMOND_PRICE_UPDATE_FIELDS = {'diamond_usd_price'}
 
     # Gold-specific fields
     gold_weight_g = fields.Float(
@@ -79,12 +80,32 @@ class ProductTemplate(models.Model):
         help='Automatically set to True if gold_weight_g is set',
     )
 
+    diamond_usd_price = fields.Float(
+        string='Diamond USD Price',
+        digits=(16, 2),
+        help='Diamond price in USD. Updating this sets standard and sale prices.',
+    )
+
+    is_diamond_product = fields.Boolean(
+        string='Is Diamond Product',
+        compute='_compute_is_diamond_product',
+        store=True,
+        help='Automatically set to True if Diamond USD Price is set',
+    )
+
     @api.depends('gold_weight_g')
     def _compute_is_gold_product(self):
         """Mark product as gold product if weight is set"""
         for record in self:
             record.is_gold_product = bool(
                 record.gold_weight_g and record.gold_weight_g > 0)
+
+    @api.depends('diamond_usd_price')
+    def _compute_is_diamond_product(self):
+        """Mark product as diamond product if USD price is set"""
+        for record in self:
+            record.is_diamond_product = bool(
+                record.diamond_usd_price and record.diamond_usd_price > 0)
 
     @api.depends('gold_weight_g', 'gold_purity', 'gold_type')
     def _compute_gold_prices(self):
@@ -162,6 +183,27 @@ class ProductTemplate(models.Model):
             'list_price': sale_price,
         }
 
+    def _get_diamond_price_update_vals(self):
+        """
+        Prepare standard and list price updates for diamond products.
+
+        Returns:
+            dict: Fields to update, or empty dict if not applicable
+        """
+        self.ensure_one()
+
+        if not self.diamond_usd_price or self.diamond_usd_price <= 0:
+            return {}
+
+        diamond_price_service = self.env['diamond.price.service']
+        exchange_rate = diamond_price_service.get_usd_to_egp_rate()
+        price_egp = self.diamond_usd_price * exchange_rate
+
+        return {
+            'standard_price': price_egp,
+            'list_price': price_egp,
+        }
+
     @api.onchange('gold_weight_g', 'gold_purity', 'gold_type')
     def _onchange_gold_pricing_fields(self):
         """Update prices immediately in the UI when gold fields change."""
@@ -173,36 +215,54 @@ class ProductTemplate(models.Model):
             if update_vals:
                 record.update(update_vals)
 
+    @api.onchange('diamond_usd_price')
+    def _onchange_diamond_pricing_fields(self):
+        """Update prices immediately in the UI when diamond price changes."""
+        for record in self:
+            update_vals = record._get_diamond_price_update_vals()
+            if update_vals:
+                record.update(update_vals)
+
     @api.model_create_multi
     def create(self, vals_list):
         records = super().create(vals_list)
-        if self.env.context.get('skip_gold_price_update'):
-            return records
+        if not self.env.context.get('skip_gold_price_update'):
+            if any(self.GOLD_PRICE_UPDATE_FIELDS & vals.keys() for vals in vals_list):
+                gold_price_service = self.env['gold.price.service']
+                base_gold_price = gold_price_service.get_current_gold_price()
 
-        if any(self.GOLD_PRICE_UPDATE_FIELDS & vals.keys() for vals in vals_list):
-            gold_price_service = self.env['gold.price.service']
-            base_gold_price = gold_price_service.get_current_gold_price()
+                for record in records:
+                    update_vals = record._get_gold_price_update_vals(base_gold_price)
+                    if update_vals:
+                        record.with_context(skip_gold_price_update=True).write(update_vals)
 
-            for record in records:
-                update_vals = record._get_gold_price_update_vals(base_gold_price)
-                if update_vals:
-                    record.with_context(skip_gold_price_update=True).write(update_vals)
+        if not self.env.context.get('skip_diamond_price_update'):
+            if any(self.DIAMOND_PRICE_UPDATE_FIELDS & vals.keys() for vals in vals_list):
+                for record in records:
+                    update_vals = record._get_diamond_price_update_vals()
+                    if update_vals:
+                        record.with_context(skip_diamond_price_update=True).write(update_vals)
 
         return records
 
     def write(self, vals):
         res = super().write(vals)
-        if self.env.context.get('skip_gold_price_update'):
-            return res
+        if not self.env.context.get('skip_gold_price_update'):
+            if self.GOLD_PRICE_UPDATE_FIELDS & set(vals.keys()):
+                gold_price_service = self.env['gold.price.service']
+                base_gold_price = gold_price_service.get_current_gold_price()
 
-        if self.GOLD_PRICE_UPDATE_FIELDS & set(vals.keys()):
-            gold_price_service = self.env['gold.price.service']
-            base_gold_price = gold_price_service.get_current_gold_price()
+                for record in self:
+                    update_vals = record._get_gold_price_update_vals(base_gold_price)
+                    if update_vals:
+                        record.with_context(skip_gold_price_update=True).write(update_vals)
 
-            for record in self:
-                update_vals = record._get_gold_price_update_vals(base_gold_price)
-                if update_vals:
-                    record.with_context(skip_gold_price_update=True).write(update_vals)
+        if not self.env.context.get('skip_diamond_price_update'):
+            if self.DIAMOND_PRICE_UPDATE_FIELDS & set(vals.keys()):
+                for record in self:
+                    update_vals = record._get_diamond_price_update_vals()
+                    if update_vals:
+                        record.with_context(skip_diamond_price_update=True).write(update_vals)
 
         return res
 

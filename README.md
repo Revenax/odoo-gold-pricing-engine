@@ -151,11 +151,22 @@ Gold fields are standard `product.template` fields and are available in Odoo’s
 - `gold_weight_g`
 - `gold_purity` (use technical values like `24K`, `21K`, `18K`, `14K`, `10K`)
 - `gold_type` (use technical values like `jewellery_local`, `jewellery_foreign`, `bars`, `ingots`, `coins`)
+- `diamond_usd_price`
 
 **Computed fields** (exportable but should not be imported):
 - `gold_cost_price`
 - `gold_min_sale_price`
 - `is_gold_product`
+- `is_diamond_product`
+
+### Diamond Pricing and Exchange Rate
+
+Diamond price input is in USD and converted to EGP for product prices:
+
+`standard_price` and `list_price` (EGP) = `diamond_usd_price` × USD→EGP rate
+
+Current implementation uses a placeholder USD→EGP rate of `50.0` in
+`diamond.price.service.get_usd_to_egp_rate()`.
 
 ### Price Updates
 
