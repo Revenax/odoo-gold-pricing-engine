@@ -24,6 +24,7 @@ class PosOrder(models.Model):
         lines_data = ui_order.get('lines', [])
         for line_data in lines_data:
             product_id = line_data[2].get('product_id')
+            price_unit = line_data[2].get('price_unit', 0)
             discount = line_data[2].get('discount', 0)
 
             if product_id:
