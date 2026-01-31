@@ -6,6 +6,8 @@
 from odoo import api, models
 from odoo.exceptions import ValidationError
 
+from ..utils import get_markup_per_gram
+
 
 class PosOrder(models.Model):
     _inherit = 'pos.order'
@@ -22,31 +24,18 @@ class PosOrder(models.Model):
         lines_data = ui_order.get('lines', [])
         for line_data in lines_data:
             product_id = line_data[2].get('product_id')
-            price_unit = line_data[2].get('price_unit', 0)
             discount = line_data[2].get('discount', 0)
 
             if product_id:
                 product = self.env['product.product'].browse(product_id)
-                if product.is_gold_product and product.gold_min_sale_price:
-                    # Calculate final price after discount
-                    final_price = price_unit * (1 - discount / 100.0)
-
-                    # Check if final price is below minimum
-                    if final_price < product.gold_min_sale_price:
-                        raise ValidationError(
-                            f'Cannot sell {product.name} below minimum price of '
-                            f'{product.gold_min_sale_price:.2f}. '
-                            f'Current price: {final_price:.2f}'
-                        )
-
+                if product.is_gold_product:
                     # Check if discount exceeds 50% of markup
                     # Markup total = markup per gram × weight (from settings)
                     has_weight = product.gold_weight_g and product.gold_weight_g > 0
                     if product.gold_type and has_weight:
-                        config = self.env['ir.config_parameter'].sudo()
-                        markup_param_key = f'gold_pricing.markup_{product.gold_type}'
-                        markup_per_gram = float(
-                            config.get_param(markup_param_key, '0.0')
+                        markup_per_gram = get_markup_per_gram(
+                            self.env,
+                            product.gold_type,
                         )
 
                         if markup_per_gram > 0:
@@ -62,27 +51,6 @@ class PosOrder(models.Model):
                                 )
 
         return order_fields
-
-    def _validate_order(self, order):
-        """
-        Additional validation method called during order processing.
-        """
-        for line in order.lines:
-            if line.product_id.is_gold_product:
-                # Calculate final price
-                final_price = line.price_unit * (1 - line.discount / 100.0)
-
-                # Validate minimum price
-                min_price = line.product_id.gold_min_sale_price
-                if min_price and final_price < min_price:
-                    raise ValidationError(
-                        f'Order validation failed: {line.product_id.name} '
-                        f'price {final_price:.2f} is below minimum '
-                        f'{min_price:.2f}'
-                    )
-
-        return super()._validate_order(order) if hasattr(super(), '_validate_order') else True
-
 
 class PosOrderLine(models.Model):
     _inherit = 'pos.order.line'

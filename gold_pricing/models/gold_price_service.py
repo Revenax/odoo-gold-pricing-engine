@@ -17,10 +17,6 @@ class GoldPriceService(models.Model):
     _name = 'gold.price.service'
     _description = 'Gold Price Service'
 
-    # Cache for current gold price
-    _current_gold_price = None
-    _price_cache_time = None
-
     def get_current_gold_price(self):
         """
         Get current gold price from API or cache.

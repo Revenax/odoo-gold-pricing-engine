@@ -7,6 +7,28 @@ import re
 from decimal import ROUND_HALF_UP, Decimal
 
 
+def get_markup_per_gram(env, gold_type: str) -> float:
+    """
+    Read markup per gram from system parameters.
+
+    Args:
+        env: Odoo environment
+        gold_type: Gold type key (e.g. jewellery_local, bars)
+
+    Returns:
+        float: Markup per gram, 0.0 if not configured or invalid
+    """
+    if not gold_type:
+        return 0.0
+
+    param_key = f'gold_pricing.markup_{gold_type}'
+    raw_value = env['ir.config_parameter'].sudo().get_param(param_key, '0.0')
+    try:
+        return float(raw_value)
+    except (TypeError, ValueError):
+        return 0.0
+
+
 def parse_gold_price_from_text(text: str) -> float:
     """
     Parse gold price from Arabic text response.
