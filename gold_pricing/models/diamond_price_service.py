@@ -53,7 +53,6 @@ class DiamondPriceService(models.Model):
         for product in diamond_products:
             product.with_context(skip_diamond_price_update=True).write({
                 'diamond_usd_price': price_usd,
-                'standard_price': price_egp,
                 'list_price': price_egp,
             })
 

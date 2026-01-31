@@ -179,7 +179,6 @@ class ProductTemplate(models.Model):
             return {}
 
         return {
-            'standard_price': cost_price,
             'list_price': sale_price,
         }
 
@@ -200,7 +199,6 @@ class ProductTemplate(models.Model):
         price_egp = self.diamond_usd_price * exchange_rate
 
         return {
-            'standard_price': price_egp,
             'list_price': price_egp,
         }
 
@@ -347,7 +345,6 @@ class ProductTemplate(models.Model):
                 )
                 update_values.append({
                     'record': product,
-                    'standard_price': cost_price,
                     'list_price': sale_price,
                     'gold_cost_price': cost_price,
                     'gold_min_sale_price': min_sale_price,
