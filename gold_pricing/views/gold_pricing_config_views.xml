@@ -18,35 +18,38 @@
                             </div>
                         </div>
                         <div class="col-12 col-lg-6 o_setting_box">
-                            <div class="o_setting_left_pane">
-                                <field name="gold_api_endpoint"/>
-                            </div>
+                            <div class="o_setting_left_pane"/>
                             <div class="o_setting_right_pane">
                                 <label for="gold_api_endpoint"/>
                                 <div class="text-muted">
                                     URL endpoint for fetching gold prices from the API
                                 </div>
+                                <div class="content-group">
+                                    <field name="gold_api_endpoint"/>
+                                </div>
                             </div>
                         </div>
                         <div class="col-12 col-lg-6 o_setting_box">
-                            <div class="o_setting_left_pane">
-                                <field name="gold_api_cookie" widget="password"/>
-                            </div>
+                            <div class="o_setting_left_pane"/>
                             <div class="o_setting_right_pane">
                                 <label for="gold_api_cookie"/>
                                 <div class="text-muted">
                                     Cookie value for API authentication
                                 </div>
+                                <div class="content-group">
+                                    <field name="gold_api_cookie" widget="password"/>
+                                </div>
                             </div>
                         </div>
                         <div class="col-12 col-lg-6 o_setting_box">
-                            <div class="o_setting_left_pane">
-                                <field name="fallback_price"/>
-                            </div>
+                            <div class="o_setting_left_pane"/>
                             <div class="o_setting_right_pane">
                                 <label for="fallback_price"/>
                                 <div class="text-muted">
                                     Fallback gold price per gram when API is unavailable
+                                </div>
+                                <div class="content-group">
+                                    <field name="fallback_price"/>
                                 </div>
                             </div>
                         </div>
@@ -62,57 +65,62 @@
                             </div>
                         </div>
                         <div class="col-12 col-lg-6 o_setting_box">
-                            <div class="o_setting_left_pane">
-                                <field name="markup_jewellery_local"/>
-                            </div>
+                            <div class="o_setting_left_pane"/>
                             <div class="o_setting_right_pane">
                                 <label for="markup_jewellery_local"/>
                                 <div class="text-muted">
                                     Markup per gram for local jewellery
                                 </div>
+                                <div class="content-group">
+                                    <field name="markup_jewellery_local"/>
+                                </div>
                             </div>
                         </div>
                         <div class="col-12 col-lg-6 o_setting_box">
-                            <div class="o_setting_left_pane">
-                                <field name="markup_jewellery_foreign"/>
-                            </div>
+                            <div class="o_setting_left_pane"/>
                             <div class="o_setting_right_pane">
                                 <label for="markup_jewellery_foreign"/>
                                 <div class="text-muted">
                                     Markup per gram for foreign jewellery
                                 </div>
+                                <div class="content-group">
+                                    <field name="markup_jewellery_foreign"/>
+                                </div>
                             </div>
                         </div>
                         <div class="col-12 col-lg-6 o_setting_box">
-                            <div class="o_setting_left_pane">
-                                <field name="markup_bars"/>
-                            </div>
+                            <div class="o_setting_left_pane"/>
                             <div class="o_setting_right_pane">
                                 <label for="markup_bars"/>
                                 <div class="text-muted">
                                     Markup per gram for gold bars
                                 </div>
+                                <div class="content-group">
+                                    <field name="markup_bars"/>
+                                </div>
                             </div>
                         </div>
                         <div class="col-12 col-lg-6 o_setting_box">
-                            <div class="o_setting_left_pane">
-                                <field name="markup_ingots"/>
-                            </div>
+                            <div class="o_setting_left_pane"/>
                             <div class="o_setting_right_pane">
                                 <label for="markup_ingots"/>
                                 <div class="text-muted">
                                     Markup per gram for gold ingots
                                 </div>
+                                <div class="content-group">
+                                    <field name="markup_ingots"/>
+                                </div>
                             </div>
                         </div>
                         <div class="col-12 col-lg-6 o_setting_box">
-                            <div class="o_setting_left_pane">
-                                <field name="markup_coins"/>
-                            </div>
+                            <div class="o_setting_left_pane"/>
                             <div class="o_setting_right_pane">
                                 <label for="markup_coins"/>
                                 <div class="text-muted">
                                     Markup per gram for gold coins
+                                </div>
+                                <div class="content-group">
+                                    <field name="markup_coins"/>
                                 </div>
                             </div>
                         </div>
