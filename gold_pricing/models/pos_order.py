@@ -29,6 +29,16 @@ class PosOrder(models.Model):
             if product_id:
                 product = self.env['product.product'].browse(product_id)
                 if product.is_gold_product:
+                    # Enforce minimum sale price
+                    if product.gold_min_sale_price:
+                        final_price = price_unit * (1 - discount / 100.0)
+                        if final_price < product.gold_min_sale_price:
+                            raise ValidationError(
+                                f'Cannot sell {product.name} below minimum price of '
+                                f'{product.gold_min_sale_price:.2f}. '
+                                f'Current price: {final_price:.2f}'
+                            )
+
                     # Check if discount exceeds 50% of markup
                     # Markup total = markup per gram × weight (from settings)
                     has_weight = product.gold_weight_g and product.gold_weight_g > 0
