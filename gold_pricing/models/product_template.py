@@ -35,6 +35,7 @@ class ProductTemplate(models.Model):
     VALID_GOLD_PURITIES = {item[0] for item in GOLD_PURITY_SELECTION}
     VALID_GOLD_TYPES = {item[0] for item in GOLD_TYPE_SELECTION}
     MAX_GOLD_WEIGHT_G = 100000
+    GOLD_PRICE_UPDATE_FIELDS = {'gold_weight_g', 'gold_purity', 'gold_type'}
 
     # Gold-specific fields
     gold_weight_g = fields.Float(
@@ -124,6 +125,86 @@ class ProductTemplate(models.Model):
                 # Invalid purity or other error
                 record.gold_cost_price = 0.0
                 record.gold_min_sale_price = 0.0
+
+    def _get_gold_price_update_vals(self, base_gold_price):
+        """
+        Prepare standard and list price updates for gold products.
+
+        Args:
+            base_gold_price: Base 21K gold price per gram
+
+        Returns:
+            dict: Fields to update, or empty dict if not applicable
+        """
+        self.ensure_one()
+
+        if not self.gold_weight_g or self.gold_weight_g <= 0:
+            return {}
+        if not self.gold_purity or not self.gold_type:
+            return {}
+
+        markup_per_gram = get_markup_per_gram(self.env, self.gold_type)
+        if markup_per_gram <= 0:
+            return {}
+
+        try:
+            cost_price, sale_price, _min_sale_price = compute_gold_product_price(
+                base_gold_price_21k=base_gold_price,
+                purity=self.gold_purity,
+                weight_g=self.gold_weight_g or 0,
+                markup_per_gram=markup_per_gram,
+            )
+        except ValueError:
+            return {}
+
+        return {
+            'standard_price': cost_price,
+            'list_price': sale_price,
+        }
+
+    @api.onchange('gold_weight_g', 'gold_purity', 'gold_type')
+    def _onchange_gold_pricing_fields(self):
+        """Update prices immediately in the UI when gold fields change."""
+        gold_price_service = self.env['gold.price.service']
+        base_gold_price = gold_price_service.get_current_gold_price()
+
+        for record in self:
+            update_vals = record._get_gold_price_update_vals(base_gold_price)
+            if update_vals:
+                record.update(update_vals)
+
+    @api.model_create_multi
+    def create(self, vals_list):
+        records = super().create(vals_list)
+        if self.env.context.get('skip_gold_price_update'):
+            return records
+
+        if any(self.GOLD_PRICE_UPDATE_FIELDS & vals.keys() for vals in vals_list):
+            gold_price_service = self.env['gold.price.service']
+            base_gold_price = gold_price_service.get_current_gold_price()
+
+            for record in records:
+                update_vals = record._get_gold_price_update_vals(base_gold_price)
+                if update_vals:
+                    record.with_context(skip_gold_price_update=True).write(update_vals)
+
+        return records
+
+    def write(self, vals):
+        res = super().write(vals)
+        if self.env.context.get('skip_gold_price_update'):
+            return res
+
+        if self.GOLD_PRICE_UPDATE_FIELDS & set(vals.keys()):
+            gold_price_service = self.env['gold.price.service']
+            base_gold_price = gold_price_service.get_current_gold_price()
+
+            for record in self:
+                update_vals = record._get_gold_price_update_vals(base_gold_price)
+                if update_vals:
+                    record.with_context(skip_gold_price_update=True).write(update_vals)
+
+        return res
 
     @api.constrains('gold_weight_g', 'gold_type', 'gold_purity')
     def _check_gold_required_fields(self):
