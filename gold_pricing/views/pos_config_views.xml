@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <!--
+        Inherits the pos.config form view. In Odoo 17 the view record id is
+        pos_config_form_view (file: point_of_sale/views/pos_config_view.xml).
+    -->
+    <record id="view_pos_config_form_gold_pricing" model="ir.ui.view">
+        <field name="name">pos.config.form.gold.pricing</field>
+        <field name="model">pos.config</field>
+        <field name="inherit_id" ref="point_of_sale.pos_config_form_view"/>
+        <field name="arch" type="xml">
+            <xpath expr="//form/sheet" position="inside">
+                <group string="Invoicing" name="gold_pricing_invoicing">
+                    <field name="require_customer"/>
+                    <field name="default_to_invoice"/>
+                </group>
+            </xpath>
+        </field>
+    </record>
+</odoo>
