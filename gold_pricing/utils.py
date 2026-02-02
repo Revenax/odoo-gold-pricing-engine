@@ -91,10 +91,10 @@ def compute_gold_product_price(
     # Purity factors mapping (relative to 21K, which is what the API returns)
     purity_factors = {
         '24K': Decimal('0.999') / Decimal('0.875'),  # 1.1417
-        '21K': Decimal('1.0'),                        # 1.0
+        '21K': Decimal('1.0'),                       # 1.0000
         '18K': Decimal('0.750') / Decimal('0.875'),  # 0.8571
-        '14K': Decimal('0.583') / Decimal('0.875'),   # 0.6663
-        '10K': Decimal('0.417') / Decimal('0.875'),    # 0.4766
+        '14K': Decimal('0.583') / Decimal('0.875'),  # 0.6663
+        '10K': Decimal('0.417') / Decimal('0.875'),  # 0.4766
     }
 
     purity_factor = purity_factors.get(purity, Decimal('0'))

@@ -1,9 +1,13 @@
 <?xml version="1.0" encoding="utf-8"?>
+<!--
+    NOT LOADED: This file is not in __manifest__ 'data' because the parent
+    view external id (inherit_id) varies by Odoo version and deployment.
+    To enable: find the pos.config form view record id in your server's
+    point_of_sale addon (e.g. addons/point_of_sale/views/pos_config_view.xml),
+    set inherit_id ref="point_of_sale.<that_record_id>", then add
+    'views/pos_config_views.xml' to __manifest__['data'].
+-->
 <odoo>
-    <!--
-        Inherits the pos.config form view. In Odoo 17 the view record id is
-        pos_config_form_view (file: point_of_sale/views/pos_config_view.xml).
-    -->
     <record id="view_pos_config_form_gold_pricing" model="ir.ui.view">
         <field name="name">pos.config.form.gold.pricing</field>
         <field name="model">pos.config</field>
