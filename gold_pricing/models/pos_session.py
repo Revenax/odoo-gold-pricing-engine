@@ -9,6 +9,14 @@ from odoo import models
 class PosSession(models.Model):
     _inherit = 'pos.session'
 
+    def _loader_params_pos_config(self):
+        params = super()._loader_params_pos_config()
+        fields = params.get('search_params', {}).get('fields', [])
+        if 'require_customer' not in fields:
+            fields = list(fields) + ['require_customer']
+        params.setdefault('search_params', {})['fields'] = fields
+        return params
+
     def _loader_params_product_product(self):
         params = super()._loader_params_product_product()
         fields = params.get('search_params', {}).get('fields', [])
