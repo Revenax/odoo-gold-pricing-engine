@@ -4,6 +4,8 @@
 # Website: https://www.revenax.com
 
 from . import (
+    account_move,  # noqa: F401
+    account_move_line,  # noqa: F401
     diamond_price_service,  # noqa: F401
     gold_price_service,  # noqa: F401
     gold_pricing_config,  # noqa: F401

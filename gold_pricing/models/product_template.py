@@ -17,11 +17,11 @@ class ProductTemplate(models.Model):
     _inherit = 'product.template'
 
     GOLD_PURITY_SELECTION = [
-        ('24K', '24K (99.9% pure)'),
-        ('21K', '21K (87.5% pure)'),
-        ('18K', '18K (75.0% pure)'),
-        ('14K', '14K (58.3% pure)'),
-        ('10K', '10K (41.7% pure)'),
+        ('24K', '24K'),
+        ('21K', '21K'),
+        ('18K', '18K'),
+        ('14K', '14K'),
+        ('10K', '10K'),
     ]
 
     GOLD_TYPE_SELECTION = [
@@ -55,6 +55,13 @@ class ProductTemplate(models.Model):
         selection=GOLD_TYPE_SELECTION,
         string='Gold Type',
         help='Type of gold product. Determines markup per gram from settings.',
+    )
+
+    making_fee = fields.Float(
+        string='Making Fee',
+        digits=(16, 2),
+        default=0.0,
+        help='Default making fee for this gold product. Can be overridden on the order line.',
     )
 
     gold_cost_price = fields.Float(
@@ -230,16 +237,19 @@ class ProductTemplate(models.Model):
                 base_gold_price = gold_price_service.get_current_gold_price()
 
                 for record in records:
-                    update_vals = record._get_gold_price_update_vals(base_gold_price)
+                    update_vals = record._get_gold_price_update_vals(
+                        base_gold_price)
                     if update_vals:
-                        record.with_context(skip_gold_price_update=True).write(update_vals)
+                        record.with_context(
+                            skip_gold_price_update=True).write(update_vals)
 
         if not self.env.context.get('skip_diamond_price_update'):
             if any(self.DIAMOND_PRICE_UPDATE_FIELDS & vals.keys() for vals in vals_list):
                 for record in records:
                     update_vals = record._get_diamond_price_update_vals()
                     if update_vals:
-                        record.with_context(skip_diamond_price_update=True).write(update_vals)
+                        record.with_context(
+                            skip_diamond_price_update=True).write(update_vals)
 
         return records
 
@@ -251,16 +261,19 @@ class ProductTemplate(models.Model):
                 base_gold_price = gold_price_service.get_current_gold_price()
 
                 for record in self:
-                    update_vals = record._get_gold_price_update_vals(base_gold_price)
+                    update_vals = record._get_gold_price_update_vals(
+                        base_gold_price)
                     if update_vals:
-                        record.with_context(skip_gold_price_update=True).write(update_vals)
+                        record.with_context(
+                            skip_gold_price_update=True).write(update_vals)
 
         if not self.env.context.get('skip_diamond_price_update'):
             if self.DIAMOND_PRICE_UPDATE_FIELDS & set(vals.keys()):
                 for record in self:
                     update_vals = record._get_diamond_price_update_vals()
                     if update_vals:
-                        record.with_context(skip_diamond_price_update=True).write(update_vals)
+                        record.with_context(
+                            skip_diamond_price_update=True).write(update_vals)
 
         return res
 

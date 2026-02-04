@@ -13,7 +13,7 @@
                         <group col="3">
                             <field name="gold_weight_g"/>
                             <field name="gold_purity"/>
-                            <field name="gold_type"/>
+                            <field name="gold_type" groups="gold_pricing.group_gold_pricing_manager"/>
                         </group>
                         <group invisible="not is_gold_product">
                             <field name="gold_cost_price" readonly="1" groups="base.group_system"/>
@@ -27,7 +27,7 @@
                     <group>
                         <field name="is_diamond_product" invisible="1"/>
                         <group col="2">
-                            <field name="diamond_usd_price"/>
+                            <field name="diamond_usd_price" groups="gold_pricing.group_gold_pricing_manager"/>
                         </group>
                     </group>
                 </page>

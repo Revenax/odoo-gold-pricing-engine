@@ -1,0 +1,54 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <template id="report_invoice_document_gold" inherit_id="account.report_invoice_document">
+        <!-- Add Purity and Weight columns to main table header (after Description) -->
+        <xpath expr="//th[@name='th_description']" position="after">
+            <th name="th_purity" class="text-end"><span>Purity</span></th>
+            <th name="th_weight" class="text-end"><span>Weight (g)</span></th>
+        </xpath>
+        <!-- Remove Taxes column from header -->
+        <xpath expr="//th[@name='th_taxes']" position="replace"/>
+        <!-- Add Purity and Weight cells to each product line (after Description) -->
+        <xpath expr="//td[@name='account_invoice_line_name']" position="after">
+            <td name="td_purity" class="text-end">
+                <span t-field="line.gold_purity"/>
+            </td>
+            <td name="td_weight" class="text-end">
+                <span t-field="line.gold_weight_g"/>
+            </td>
+        </xpath>
+        <!-- Remove Taxes cell and the t-set for taxes from product line -->
+        <xpath expr="//td[@name='td_taxes']" position="replace"/>
+        <xpath expr="//t[@t-set='taxes'][@t-value]" position="replace"/>
+        <!-- Replace full tax totals block with only Total row (tax_totals already set above) -->
+        <xpath expr="//t[@t-call='account.document_tax_totals']" position="replace">
+            <tr class="border-black o_total">
+                <td><strong>Total</strong></td>
+                <td class="text-end">
+                    <span t-out="tax_totals.get('formatted_amount_total')"/>
+                </td>
+            </tr>
+        </xpath>
+        <!-- After main table: Total gold weight summary only (no duplicate Gold details table) -->
+        <xpath expr="//table[@name='invoice_line_table']" position="after">
+            <t t-set="gold_lines" t-value="o._get_gold_invoice_lines()"/>
+            <t t-set="total_gold_weight" t-value="sum(line.gold_weight_g or 0 for line in gold_lines)"/>
+            <div class="mt-3" t-if="gold_lines" style="page-break-inside: avoid;">
+                <table class="table table-sm table-borderless" style="max-width: 320px; margin-left: auto;">
+                    <tr>
+                        <td class="text-start"><strong>Total gold weight (g)</strong></td>
+                        <td class="text-end">
+                            <span t-out="total_gold_weight"/>
+                        </td>
+                    </tr>
+                </table>
+            </div>
+        </xpath>
+    </template>
+    <!-- Hide tax breakdown in company-currency block (when invoice currency != company currency) -->
+    <template id="document_tax_totals_company_currency_gold" inherit_id="account.document_tax_totals_company_currency_template">
+        <xpath expr="//div[contains(@class, 'totals_taxes_company_currency')]" position="replace">
+            <div class="oe_structure"/>
+        </xpath>
+    </template>
+</odoo>

@@ -26,6 +26,7 @@
         'base',
         'product',
         'point_of_sale',
+        'account',
         'stock',
     ],
     'data': [
@@ -35,6 +36,7 @@
         'views/pos_config_views.xml',
         'views/pos_order_views.xml',
         'views/product_template_views.xml',
+        'report/report_invoice_gold.xml',
         'data/gold_pricing_cron.xml',
     ],
     'assets': {
