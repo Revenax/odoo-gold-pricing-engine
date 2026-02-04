@@ -1,6 +1,20 @@
 <?xml version="1.0" encoding="utf-8"?>
 <odoo>
     <template id="report_invoice_document_gold" inherit_id="account.report_invoice_document">
+        <!-- Hide partner (customer) address/name block - we only show customer in "Invoice to:" -->
+        <xpath expr="//div[@name='no_shipping']" position="replace">
+            <div name="no_shipping" class="offset-col-6 col-6"/>
+        </xpath>
+        <xpath expr="//div[@name='address_same_as_shipping']" position="replace">
+            <div name="address_same_as_shipping" class="offset-col-6 col-6"/>
+        </xpath>
+        <xpath expr="//div[@name='address_not_same_as_shipping']" position="replace">
+            <div name="address_not_same_as_shipping" class="col-6"/>
+        </xpath>
+        <!-- Hide shipping address block (avoid duplicate customer address) -->
+        <xpath expr="//div[@name='shipping_address_block']" position="replace">
+            <div name="shipping_address_block"/>
+        </xpath>
         <!-- Hide external layout header (removes "Administrator" / document title above invoice) and add top spacing -->
         <xpath expr="(//div[contains(@class, 'row')])[1]" position="before">
             <style>
@@ -120,9 +134,5 @@
         <xpath expr="//div[contains(@class, 'totals_taxes_company_currency')]" position="replace">
             <div class="oe_structure"/>
         </xpath>
-    </template>
-    <!-- Remove external layout header (Administrator / document title) for cleaner invoice -->
-    <template id="external_layout_standard_gold" inherit_id="web.external_layout_standard">
-        <xpath expr="//div[contains(@class, 'o_standard_header')]" position="replace"/>
     </template>
 </odoo>
