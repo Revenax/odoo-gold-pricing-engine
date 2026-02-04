@@ -1,13 +1,18 @@
 <?xml version="1.0" encoding="utf-8"?>
 <odoo>
     <template id="report_invoice_document_gold" inherit_id="account.report_invoice_document">
-        <!-- Top margin for pre-printed logo (space above first content) -->
+        <!-- Hide external layout header (removes "Administrator" / document title above invoice) and add top spacing -->
         <xpath expr="(//div[contains(@class, 'row')])[1]" position="before">
-            <div style="min-height: 72px;" class="o_report_logo_space"/>
+            <style>
+                .o_standard_header, .o_background_header, .o_clean_header, .o_boxed_header,
+                .o_report_layout_standard &gt; div:first-child:not(.page),
+                div[class*='external_layout'][class*='header'] { display: none !important; }
+            </style>
+            <div style="min-height: 100px;" class="o_report_logo_space"/>
         </xpath>
         <!-- Invoice to: customer name and number (mandatory display) -->
         <xpath expr="//div[@id='informations']" position="before">
-            <div class="row mb-2" name="invoice_to_block">
+            <div class="row mb-4" name="invoice_to_block">
                 <div class="col-6">
                     <strong>Invoice to:</strong>
                     <t t-if="o.partner_id.phone"><span t-field="o.partner_id.phone"/></t>
@@ -57,7 +62,15 @@
                 </td>
             </tr>
         </xpath>
-        <!-- Footer: company phone, address, email, website -->
+        <!-- Page container: flex column so footer can sit at bottom -->
+        <xpath expr="//div[contains(@class, 'page') and contains(@class, 'mb-4')]" position="attributes">
+            <attribute name="style">min-height: 88vh; display: flex; flex-direction: column;</attribute>
+        </xpath>
+        <!-- Spacer to push footer to bottom of page -->
+        <xpath expr="//div[@id='payment_term']" position="after">
+            <div style="min-height: 30vh; flex: 1 1 auto;" class="o_report_footer_spacer"/>
+        </xpath>
+        <!-- Footer: company phone, address, email, website (at bottom) -->
         <xpath expr="//div[@id='payment_term']" position="after">
             <div class="mt-4 pt-3 border-top" style="border-top: 1px solid #dee2e6 !important;">
                 <div class="row text-center small">
@@ -107,5 +120,9 @@
         <xpath expr="//div[contains(@class, 'totals_taxes_company_currency')]" position="replace">
             <div class="oe_structure"/>
         </xpath>
+    </template>
+    <!-- Remove external layout header (Administrator / document title) for cleaner invoice -->
+    <template id="external_layout_standard_gold" inherit_id="web.external_layout_standard">
+        <xpath expr="//div[contains(@class, 'o_standard_header')]" position="replace"/>
     </template>
 </odoo>

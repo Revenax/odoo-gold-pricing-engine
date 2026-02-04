@@ -27,6 +27,7 @@
         'product',
         'point_of_sale',
         'account',
+        'web',
         'stock',
     ],
     'data': [
