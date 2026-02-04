@@ -1,6 +1,34 @@
 <?xml version="1.0" encoding="utf-8"?>
 <odoo>
     <template id="report_invoice_document_gold" inherit_id="account.report_invoice_document">
+        <!-- Top margin for pre-printed logo (space above first content) -->
+        <xpath expr="(//div[contains(@class, 'row')])[1]" position="before">
+            <div style="min-height: 72px;" class="o_report_logo_space"/>
+        </xpath>
+        <!-- Invoice to: customer name and number (mandatory display) -->
+        <xpath expr="//div[@id='informations']" position="before">
+            <div class="row mb-2" name="invoice_to_block">
+                <div class="col-6">
+                    <strong>Invoice to:</strong>
+                    <t t-if="o.partner_id.phone"><span t-field="o.partner_id.phone"/></t>
+                    <t t-elif="o.partner_id.mobile"><span t-field="o.partner_id.mobile"/></t>
+                    <t t-if="o.partner_id.phone or o.partner_id.mobile"> </t>
+                    <span t-field="o.partner_id.name"/>
+                </div>
+                <div class="col-6 text-end">
+                    <strong>Date:</strong>
+                    <span t-field="o.invoice_date" t-options="{'format': 'dd-MMM-yy'}"/>
+                </div>
+            </div>
+        </xpath>
+        <!-- Format invoice date as dd-MMM-yy in the informations block (if still shown there) -->
+        <xpath expr="//div[@name='invoice_date']//span[@t-field='o.invoice_date']" position="attributes">
+            <attribute name="t-options">{'format': 'dd-MMM-yy'}</attribute>
+        </xpath>
+        <!-- Remove Due Date -->
+        <xpath expr="//div[@name='due_date']" position="replace"/>
+        <!-- Remove Amount Due row from payments section (tr containing amount_residual) -->
+        <xpath expr="//tr[.//span[@t-field='o.amount_residual']]" position="replace"/>
         <!-- Add Purity and Weight columns to main table header (after Description) -->
         <xpath expr="//th[@name='th_description']" position="after">
             <th name="th_purity" class="text-end"><span>Purity</span></th>
@@ -28,6 +56,35 @@
                     <span t-out="tax_totals.get('formatted_amount_total')"/>
                 </td>
             </tr>
+        </xpath>
+        <!-- Footer: company phone, address, email, website -->
+        <xpath expr="//div[@id='payment_term']" position="after">
+            <div class="mt-4 pt-3 border-top" style="border-top: 1px solid #dee2e6 !important;">
+                <div class="row text-center small">
+                    <div class="col-4">
+                        <t t-if="o.company_id.phone">
+                            <span t-field="o.company_id.phone"/>
+                        </t>
+                    </div>
+                    <div class="col-4">
+                        <t t-if="o.company_id.street or o.company_id.city">
+                            <span t-field="o.company_id.street"/>
+                            <t t-if="o.company_id.street and o.company_id.city">, </t>
+                            <span t-field="o.company_id.city"/>
+                            <t t-if="o.company_id.country_id">, <span t-field="o.company_id.country_id.name"/></t>
+                        </t>
+                    </div>
+                    <div class="col-4">
+                        <t t-if="o.company_id.email">
+                            <span t-field="o.company_id.email"/>
+                        </t>
+                        <t t-if="o.company_id.email and o.company_id.website"> | </t>
+                        <t t-if="o.company_id.website">
+                            <span t-field="o.company_id.website"/>
+                        </t>
+                    </div>
+                </div>
+            </div>
         </xpath>
         <!-- After main table: Total gold weight summary only (no duplicate Gold details table) -->
         <xpath expr="//table[@name='invoice_line_table']" position="after">
