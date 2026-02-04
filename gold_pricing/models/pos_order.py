@@ -20,20 +20,6 @@ class PosOrder(models.Model):
         """
         order_fields = super()._order_fields(ui_order)
 
-        # Require customer when pos.config has require_customer enabled
-        session_id = order_fields.get('session_id')
-        if session_id:
-            config = self.env['pos.session'].browse(session_id).config_id
-            if config.require_customer:
-                partner_id = order_fields.get('partner_id')
-                if not partner_id:
-                    raise ValidationError(
-                        _(
-                            'A customer is required for this order. '
-                            'Please select a customer before payment.'
-                        )
-                    )
-
         # Validate each line for gold products
         lines_data = ui_order.get('lines', [])
         for line_data in lines_data:

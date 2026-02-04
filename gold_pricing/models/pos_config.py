@@ -9,11 +9,6 @@ from odoo import fields, models
 class PosConfig(models.Model):
     _inherit = "pos.config"
 
-    require_customer = fields.Boolean(
-        string="Require Customer",
-        default=False,
-        help="Require a customer to be set on the order.",
-    )
     default_to_invoice = fields.Boolean(
         string="Default to Invoice",
         default=False,

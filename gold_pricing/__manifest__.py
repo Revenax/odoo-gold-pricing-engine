@@ -38,7 +38,6 @@
     'assets': {
         'point_of_sale.assets': [
             'gold_pricing/static/src/js/pos_discount_override.js',
-            'gold_pricing/static/src/js/pos_require_customer.js',
         ],
     },
     'installable': True,

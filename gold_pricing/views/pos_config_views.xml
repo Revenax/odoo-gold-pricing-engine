@@ -15,7 +15,6 @@
         <field name="arch" type="xml">
             <xpath expr="//form/sheet" position="inside">
                 <group string="Invoicing" name="gold_pricing_invoicing">
-                    <field name="require_customer"/>
                     <field name="default_to_invoice"/>
                 </group>
             </xpath>

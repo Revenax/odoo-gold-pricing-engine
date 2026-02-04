@@ -9,21 +9,9 @@ from odoo import models
 class PosSession(models.Model):
     _inherit = 'pos.session'
 
-    def _get_pos_ui_pos_config(self, params):
-        result = super()._get_pos_ui_pos_config(params)
-        configs = result if isinstance(result, list) else [result]
-        for config in configs:
-            if isinstance(config, dict) and config.get('id'):
-                if 'require_customer' not in config:
-                    config['require_customer'] = (
-                        self.env['pos.config'].browse(
-                            config['id']).require_customer
-                    )
-        return result
-
     def _loader_params_product_product(self):
         params = super()._loader_params_product_product()
-        fields = params.get('search_params', {}).get('fields', [])
+        fields = list(params.get('search_params', {}).get('fields', []))
 
         gold_fields = [
             'gold_min_sale_price',
