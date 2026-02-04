@@ -25,8 +25,11 @@ fi
 
 git fetch origin main
 git pull --ff-only origin main || {
-  echo "Error: Fast-forward pull failed. Deployment aborted."
-  exit 1
+  echo "Fast-forward pull failed, trying rebase..."
+  git rebase origin/main || {
+    echo "Error: Rebase failed. Resolve conflicts or run 'git rebase --abort' and retry."
+    exit 1
+  }
 }
 
 python3 -m py_compile gold_pricing/utils.py || {
