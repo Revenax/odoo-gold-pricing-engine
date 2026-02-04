@@ -7,6 +7,8 @@
 
 import { Orderline } from "@point_of_sale/app/store/models";
 import { ProductScreen } from "@point_of_sale/app/screens/product_screen/product_screen";
+import { PaymentScreen } from "@point_of_sale/app/screens/payment_screen/payment_screen";
+import { ConfirmPopup } from "@point_of_sale/app/utils/confirm_popup/confirm_popup";
 import { patch } from "@web/core/utils/patch";
 import { _t } from "@web/core/l10n/translation";
 
@@ -117,7 +119,7 @@ patch(Orderline.prototype, {
       if (minSalePrice > 0 && finalPrice < minSalePrice) {
         const unitPrice = this.get_unit_price();
         const discountAdjustment =
-          unitPrice > 0 ? (minSalePrice - finalPrice) / unitPrice * 100 : 0;
+          unitPrice > 0 ? ((minSalePrice - finalPrice) / unitPrice) * 100 : 0;
 
         if (this.discount < discountAdjustment) {
           this.set_discount(0);
@@ -142,9 +144,43 @@ patch(Orderline.prototype, {
 });
 
 /**
- * Override ProductScreen to add validation when clicking discount button.
+ * Require customer before payment when pos.config.require_customer === "payment".
+ * Compliant with OCA pos_customer_required behaviour.
+ */
+patch(PaymentScreen.prototype, {
+  async _isOrderValid(isForceValidate) {
+    if (
+      this.pos.config.require_customer === "payment" &&
+      !this.currentOrder.get_partner()
+    ) {
+      const { confirmed } = await this.popup.add(ConfirmPopup, {
+        title: _t("An anonymous order cannot be confirmed"),
+        body: _t("Please select a customer for this order."),
+      });
+      if (confirmed) {
+        this.selectPartner();
+      }
+      return false;
+    }
+    return super._isOrderValid(isForceValidate);
+  },
+});
+
+/**
+ * Override ProductScreen: require customer before order when
+ * pos.config.require_customer === "order", and add discount validation for gold.
  */
 patch(ProductScreen.prototype, {
+  onMounted() {
+    if (
+      this.pos.config.require_customer === "order" &&
+      !this.pos.get_order().get_partner()
+    ) {
+      this.pos.showTempScreen("PartnerListScreen", {});
+    }
+    super.onMounted(...arguments);
+  },
+
   /**
    * Override clickDiscount to add validation for gold products.
    */

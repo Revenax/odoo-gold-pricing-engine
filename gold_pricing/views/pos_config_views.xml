@@ -1,22 +1,26 @@
 <?xml version="1.0" encoding="utf-8"?>
 <!--
-    NOT LOADED: This file is not in __manifest__ 'data' because the parent
-    view external id (inherit_id) varies by Odoo version and deployment.
-    To enable: find the pos.config form view record id in your server's
-    point_of_sale addon (e.g. addons/point_of_sale/views/pos_config_view.xml),
-    set inherit_id ref="point_of_sale.<that_record_id>", then add
-    'views/pos_config_views.xml' to __manifest__['data'].
+    Odoo 17 pos.config form has no product_prices; it uses o_settings_container.
+    We inject after the main settings block so "Invoicing" and "Require Customer" appear
+    on the form. inherit_id: point_of_sale.pos_config_view_form.
 -->
 <odoo>
     <record id="view_pos_config_form_gold_pricing" model="ir.ui.view">
         <field name="name">pos.config.form.gold.pricing</field>
         <field name="model">pos.config</field>
-        <field name="inherit_id" ref="point_of_sale.pos_config_form_view"/>
+        <field name="inherit_id" ref="point_of_sale.pos_config_view_form"/>
         <field name="arch" type="xml">
-            <xpath expr="//form/sheet" position="inside">
-                <group string="Invoicing" name="gold_pricing_invoicing">
-                    <field name="default_to_invoice"/>
-                </group>
+            <!-- Anchor: second o_settings_container = main settings (Multi Employees, ePos, IoT Box).
+                 Adding after it shows our settings on the same form. -->
+            <xpath expr="(//div[contains(@class,'o_settings_container')])[2]" position="after">
+                <div class="row mt16 o_settings_container" invisible="context.get('pos_config_create_mode', False)">
+                    <setting string="Invoicing" help="Default behaviour for new orders: to invoice.">
+                        <field name="default_to_invoice"/>
+                    </setting>
+                    <setting string="Require Customer" help="Require customer for orders in this point of sale: Optional, Required before paying, or Required before starting the order.">
+                        <field name="require_customer" widget="radio" class="o_light_label"/>
+                    </setting>
+                </div>
             </xpath>
         </field>
     </record>

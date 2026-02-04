@@ -3,7 +3,7 @@
 # Author: Mohamed A. Abdallah
 # Website: https://www.revenax.com
 
-from odoo import fields, models
+from odoo import api, fields, models
 
 
 class ResConfigSettings(models.TransientModel):
@@ -68,6 +68,52 @@ class ResConfigSettings(models.TransientModel):
         default=0.0,
         help='Markup per gram for gold coins',
     )
+
+    pos_config_id = fields.Many2one(
+        comodel_name="pos.config",
+        string="Point of Sale",
+        help="Select the Point of Sale to configure. Used for Require Customer and Invoicing below.",
+    )
+    require_customer = fields.Selection(
+        selection=[
+            ("no", "Optional"),
+            ("payment", "Required before paying"),
+            ("order", "Required before starting the order"),
+        ],
+        string="Require Customer",
+        default="no",
+        help="Require customer for orders in this point of sale.",
+    )
+    pos_to_invoice_by_default = fields.Boolean(
+        string="Default to Invoice",
+        default=False,
+        help="Default behaviour for new orders: to invoice.",
+    )
+
+    @api.onchange("pos_config_id")
+    def _onchange_pos_config_id(self):
+        if self.pos_config_id:
+            self.require_customer = self.pos_config_id.require_customer
+            self.pos_to_invoice_by_default = self.pos_config_id.default_to_invoice
+
+    def get_values(self):
+        res = super().get_values()
+        pos_config = self.env["pos.config"].search(
+            [("company_id", "=", self.env.company.id)], limit=1
+        )
+        if pos_config:
+            res["pos_config_id"] = pos_config.id
+            res["require_customer"] = pos_config.require_customer
+            res["pos_to_invoice_by_default"] = pos_config.default_to_invoice
+        return res
+
+    def set_values(self):
+        super().set_values()
+        if self.pos_config_id:
+            self.pos_config_id.write({
+                "require_customer": self.require_customer,
+                "default_to_invoice": self.pos_to_invoice_by_default,
+            })
 
     def get_markup_for_type(self, gold_type):
         """

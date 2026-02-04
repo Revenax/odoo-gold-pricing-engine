@@ -3,7 +3,7 @@
 # Author: Mohamed A. Abdallah
 # Website: https://www.revenax.com
 
-from odoo import _, api, models
+from odoo import _, api, fields, models
 from odoo.exceptions import ValidationError
 
 from ..utils import get_markup_per_gram
@@ -11,6 +11,18 @@ from ..utils import get_markup_per_gram
 
 class PosOrder(models.Model):
     _inherit = 'pos.order'
+
+    require_customer = fields.Selection(
+        related="session_id.config_id.require_customer",
+    )
+
+    @api.constrains("partner_id", "session_id")
+    def _check_partner(self):
+        for rec in self:
+            if rec.require_customer != "no" and not rec.partner_id:
+                raise ValidationError(
+                    _("Customer is required for this order and is missing.")
+                )
 
     @api.model
     def _order_fields(self, ui_order):

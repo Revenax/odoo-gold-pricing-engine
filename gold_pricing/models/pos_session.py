@@ -9,6 +9,17 @@ from odoo import models
 class PosSession(models.Model):
     _inherit = 'pos.session'
 
+    def _loader_params_pos_config(self):
+        params = super()._loader_params_pos_config()
+        search_params = params.get("search_params") or {}
+        fields = search_params.get("fields")
+        # When parent uses fields=[] it means "all fields"; only extend when
+        # parent explicitly lists fields so require_customer is included.
+        if isinstance(fields, list) and len(fields) > 0 and "require_customer" not in fields:
+            params.setdefault("search_params", {})[
+                "fields"] = fields + ["require_customer"]
+        return params
+
     def _loader_params_product_product(self):
         params = super()._loader_params_product_product()
         fields = list(params.get('search_params', {}).get('fields', []))

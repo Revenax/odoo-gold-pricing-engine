@@ -126,6 +126,55 @@
                         </div>
                     </div>
                 </div>
+                <div class="app_settings_block" data-string="Point of Sale" data-key="point_of_sale_gold_pricing">
+                    <div class="row mt16 o_settings_container">
+                        <div class="col-12 o_setting_box">
+                            <div class="o_setting_left_pane"/>
+                            <div class="o_setting_right_pane">
+                                <span class="o_form_label">Point of Sale</span>
+                                <div class="text-muted">
+                                    Require customer and default invoicing for the selected Point of Sale.
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-12 col-lg-6 o_setting_box">
+                            <div class="o_setting_left_pane"/>
+                            <div class="o_setting_right_pane">
+                                <label for="pos_config_id"/>
+                                <div class="text-muted">
+                                    Select which Point of Sale to configure
+                                </div>
+                                <div class="content-group">
+                                    <field name="pos_config_id" options="{'no_create': True}"/>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-12 col-lg-6 o_setting_box" invisible="not pos_config_id">
+                            <div class="o_setting_left_pane"/>
+                            <div class="o_setting_right_pane">
+                                <label for="require_customer"/>
+                                <div class="text-muted">
+                                    Optional, Required before paying, or Required before starting the order
+                                </div>
+                                <div class="content-group">
+                                    <field name="require_customer" widget="radio"/>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-12 col-lg-6 o_setting_box" invisible="not pos_config_id">
+                            <div class="o_setting_left_pane"/>
+                            <div class="o_setting_right_pane">
+                                <label for="pos_to_invoice_by_default"/>
+                                <div class="text-muted">
+                                    Default behaviour for new orders: to invoice
+                                </div>
+                                <div class="content-group">
+                                    <field name="pos_to_invoice_by_default"/>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
             </xpath>
         </field>
     </record>

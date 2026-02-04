@@ -32,6 +32,8 @@
         'security/ir.model.access.csv',
         'security/gold_pricing_security.xml',
         'views/gold_pricing_config_views.xml',
+        'views/pos_config_views.xml',
+        'views/pos_order_views.xml',
         'views/product_template_views.xml',
         'data/gold_pricing_cron.xml',
     ],

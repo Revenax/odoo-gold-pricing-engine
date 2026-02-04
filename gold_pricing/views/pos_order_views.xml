@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+    If view load fails: inherit_id may vary by Odoo version. Common ids:
+    point_of_sale.view_pos_pos_form (14/15) or point_of_sale.pos_order_form (17).
+-->
+<odoo>
+    <record id="view_pos_order_form_require_customer" model="ir.ui.view">
+        <field name="name">pos.order.form.require.customer</field>
+        <field name="model">pos.order</field>
+        <field name="inherit_id" ref="point_of_sale.view_pos_pos_form"/>
+        <field name="arch" type="xml">
+            <xpath expr="//sheet" position="inside">
+                <field name="require_customer" invisible="1"/>
+            </xpath>
+            <xpath expr="//field[@name='partner_id']" position="attributes">
+                <attribute name="required">require_customer != 'no'</attribute>
+                <attribute name="readonly">state == 'invoiced'</attribute>
+            </xpath>
+        </field>
+    </record>
+</odoo>
