@@ -89,10 +89,11 @@ def compute_gold_product_price(
             - min_sale_price: Minimum sale price (cost + markup_total × 0.5)
     """
     # Purity factors mapping (relative to 21K, which is what the API returns)
+    # 24K = 8/7 of 21K; 18K = 7/8 of 21K
     purity_factors = {
-        '24K': Decimal('0.999') / Decimal('0.875'),  # 1.1417
+        '24K': Decimal('8') / Decimal('7'),         # 8/7 of 21K
         '21K': Decimal('1.0'),                       # 1.0000
-        '18K': Decimal('0.750') / Decimal('0.875'),  # 0.8571
+        '18K': Decimal('7') / Decimal('8'),          # 7/8 of 21K
         '14K': Decimal('0.583') / Decimal('0.875'),  # 0.6663
         '10K': Decimal('0.417') / Decimal('0.875'),  # 0.4766
     }

@@ -39,12 +39,24 @@ def test_compute_21k_price():
 
 
 def test_compute_24k_price():
-    """Test price computation for 24K gold."""
+    """Test price computation for 24K gold (24K = 8/7 of 21K)."""
     cost, sale, min_sale = compute_gold_product_price(
         100.0, '24K', 1.0, 10.0
     )
-    assert abs(cost - 114.17) < 0.01
-    assert abs(sale - 124.17) < 0.01
+    # 24K factor 8/7: cost = 100 * 8/7 = 114.29, sale = 114.29 + 10 = 124.29
+    assert abs(cost - 114.29) < 0.01
+    assert abs(sale - 124.29) < 0.01
+
+
+def test_compute_18k_price():
+    """Test price computation for 18K gold (18K = 7/8 of 21K)."""
+    cost, sale, min_sale = compute_gold_product_price(
+        100.0, '18K', 8.0, 5.0
+    )
+    # 18K factor 7/8: cost = 100 * 7/8 * 8 = 700, sale = 700 + 40 = 740
+    assert cost == 700.0
+    assert sale == 740.0
+    assert min_sale == 720.0
 
 
 def test_zero_markup():
