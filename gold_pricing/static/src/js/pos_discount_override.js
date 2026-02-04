@@ -115,8 +115,9 @@ patch(Orderline.prototype, {
       const finalPrice = result.price || 0;
 
       if (minSalePrice > 0 && finalPrice < minSalePrice) {
-        const priceDiff = minSalePrice - finalPrice;
-        const discountAdjustment = (priceDiff / this.get_unit_price()) * 100;
+        const unitPrice = this.get_unit_price();
+        const discountAdjustment =
+          unitPrice > 0 ? (minSalePrice - finalPrice) / unitPrice * 100 : 0;
 
         if (this.discount < discountAdjustment) {
           this.set_discount(0);
