@@ -40,6 +40,24 @@ if [ "$GIT_REPO_PATH" != "$DEPLOY_TARGET" ]; then
   cp -a "$GIT_REPO_PATH/gold_pricing" "$(dirname "$DEPLOY_TARGET")/"
 fi
 
+# Graceful stop: systemctl stop sends SIGTERM so Odoo can finish in-flight requests and
+# release DB connections. We then wait for the service to be fully inactive before upgrading.
+# Otherwise the running server holds locks and upgrade "sometimes" fails with "lock timeout".
+# This isn't bound to happen, but It happenes to me sometimes, failling a couple of tests.
+GRACEFUL_STOP_TIMEOUT="${GRACEFUL_STOP_TIMEOUT:-120}"
+echo "Stopping Odoo | Graceful with SIGTERM"
+sudo systemctl stop odoo || { echo "Error: Odoo stop failed"; exit 1; }
+deadline=$(($(date +%s) + GRACEFUL_STOP_TIMEOUT))
+while systemctl is-active -q odoo 2>/dev/null; do
+  if [ "$(date +%s)" -ge "$deadline" ]; then
+    echo "Warning: Odoo still active after ${GRACEFUL_STOP_TIMEOUT}s, proceeding anyway"
+    break
+  fi
+  echo "  Waiting for Odoo to finish shutting down..."
+  sleep 2
+done
+echo "Odoo stopped."
+
 echo "Upgrading module: gold_pricing"
 # Run upgrade the same way systemd does: venv python + odoo-bin (so psycopg2 etc. are available)
 ODOO_PYTHON="${ODOO_PYTHON:-}"
@@ -53,17 +71,33 @@ fi
 if [ -z "$ODOO_BIN" ] || [ ! -x "$ODOO_BIN" ]; then
   echo "Error: Odoo binary not found. On the server run: systemctl cat odoo | grep ExecStart"
   echo "Then set ODOO_BIN (and ODOO_PYTHON if needed) at the top of scripts/remote-deploy.sh."
+  sudo systemctl start odoo || true
   exit 1
 fi
+
+ODOO_CONFIG="${ODOO_CONFIG:-/etc/odoo.conf}"
+UPGRADE_OUTPUT=$(mktemp)
+trap 'rm -f "$UPGRADE_OUTPUT"; sudo systemctl start odoo || true' EXIT
+
+set +e
 if [ -n "$ODOO_PYTHON" ] && [ -x "$ODOO_PYTHON" ]; then
-  sudo -u odoo "$ODOO_PYTHON" "$ODOO_BIN" -u gold_pricing --stop-after-init -c /etc/odoo.conf || { echo "Error: Odoo upgrade failed"; exit 1; }
+  sudo -u odoo "$ODOO_PYTHON" "$ODOO_BIN" -u gold_pricing --stop-after-init -c "$ODOO_CONFIG" >"$UPGRADE_OUTPUT" 2>&1
 else
-  sudo -u odoo "$ODOO_BIN" -u gold_pricing --stop-after-init -c /etc/odoo.conf || { echo "Error: Odoo upgrade failed"; exit 1; }
+  sudo -u odoo "$ODOO_BIN" -u gold_pricing --stop-after-init -c "$ODOO_CONFIG" >"$UPGRADE_OUTPUT" 2>&1
+fi
+UPGRADE_EXIT=$?
+set -e
+
+if [ "$UPGRADE_EXIT" -ne 0 ]; then
+  echo "Error: Odoo upgrade failed (exit $UPGRADE_EXIT). Output:"
+  cat "$UPGRADE_OUTPUT"
+  exit 1
 fi
 echo "Module upgraded."
 
-echo "Restarting Odoo"
-sudo systemctl restart odoo || { echo "Error: Odoo restart failed"; exit 1; }
-echo "Odoo restarted."
+trap - EXIT
+echo "Starting Odoo"
+sudo systemctl start odoo || { echo "Error: Odoo start failed"; exit 1; }
+echo "Odoo started."
 
 echo "Deployment successful."
