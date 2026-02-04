@@ -22,7 +22,7 @@
                 .o_report_layout_standard &gt; div:first-child:not(.page),
                 div[class*='external_layout'][class*='header'] { display: none !important; }
             </style>
-            <div style="min-height: 100px;" class="o_report_logo_space"/>
+            <div style="min-height: 20px;" class="o_report_logo_space"/>
         </xpath>
         <!-- Invoice to: customer name and number (mandatory display) -->
         <xpath expr="//div[@id='informations']" position="before">
