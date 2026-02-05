@@ -55,8 +55,16 @@ class PosOrder(models.Model):
         line_vals['gold_weight_g'] = product.gold_weight_g or 0.0
         line_vals['gold_type'] = product.gold_type
         line_vals['making_fee'] = getattr(product, 'making_fee', 0.0) or 0.0
-        gold_price_service = self.env['gold.price.service']
-        line_vals['gold_price_per_gram'] = gold_price_service.get_current_gold_price()
+        try:
+            gold_price_service = self.env['gold.price.service']
+            line_vals['gold_price_per_gram'] = (
+                gold_price_service.get_current_gold_price()
+            )
+        except Exception as e:
+            raise ValidationError(
+                _('Could not fetch gold price for order line. '
+                  'Please check gold price settings. Details: %s') % str(e)
+            ) from e
 
     @api.model
     def _order_fields(self, ui_order):

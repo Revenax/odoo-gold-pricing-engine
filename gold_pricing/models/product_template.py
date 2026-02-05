@@ -5,7 +5,7 @@
 
 import logging
 
-from odoo import api, fields, models
+from odoo import _, api, fields, models
 from odoo.exceptions import ValidationError
 
 from ..utils import compute_gold_product_price, get_markup_per_gram  # noqa: E402
@@ -118,7 +118,15 @@ class ProductTemplate(models.Model):
     def _compute_gold_prices(self):
         """Compute gold cost price and minimum sale price"""
         gold_price_service = self.env['gold.price.service']
-        base_gold_price = gold_price_service.get_current_gold_price()
+        try:
+            base_gold_price = gold_price_service.get_current_gold_price()
+        except Exception as e:
+            _logger.warning(
+                'Gold price service failed in _compute_gold_prices: %s',
+                str(e),
+                exc_info=True,
+            )
+            base_gold_price = 0.0
 
         for record in self:
             if not record.gold_weight_g or record.gold_weight_g <= 0:
@@ -212,69 +220,102 @@ class ProductTemplate(models.Model):
     @api.onchange('gold_weight_g', 'gold_purity', 'gold_type')
     def _onchange_gold_pricing_fields(self):
         """Update prices immediately in the UI when gold fields change."""
-        gold_price_service = self.env['gold.price.service']
-        base_gold_price = gold_price_service.get_current_gold_price()
-
-        for record in self:
-            update_vals = record._get_gold_price_update_vals(base_gold_price)
-            if update_vals:
-                record.update(update_vals)
+        try:
+            gold_price_service = self.env['gold.price.service']
+            base_gold_price = gold_price_service.get_current_gold_price()
+            for record in self:
+                update_vals = record._get_gold_price_update_vals(
+                    base_gold_price)
+                if update_vals:
+                    record.update(update_vals)
+        except Exception as e:
+            raise ValidationError(
+                _('Gold price could not be updated. Please try again or check '
+                  'gold price settings. Details: %s') % str(e)
+            ) from e
 
     @api.onchange('diamond_usd_price')
     def _onchange_diamond_pricing_fields(self):
         """Update prices immediately in the UI when diamond price changes."""
-        for record in self:
-            update_vals = record._get_diamond_price_update_vals()
-            if update_vals:
-                record.update(update_vals)
+        try:
+            for record in self:
+                update_vals = record._get_diamond_price_update_vals()
+                if update_vals:
+                    record.update(update_vals)
+        except Exception as e:
+            raise ValidationError(
+                _('Diamond price could not be updated. Details: %s') % str(e)
+            ) from e
 
     @api.model_create_multi
     def create(self, vals_list):
         records = super().create(vals_list)
-        if not self.env.context.get('skip_gold_price_update'):
-            if any(self.GOLD_PRICE_UPDATE_FIELDS & vals.keys() for vals in vals_list):
-                gold_price_service = self.env['gold.price.service']
-                base_gold_price = gold_price_service.get_current_gold_price()
+        try:
+            if not self.env.context.get('skip_gold_price_update'):
+                if any(
+                    self.GOLD_PRICE_UPDATE_FIELDS & vals.keys()
+                    for vals in vals_list
+                ):
+                    gold_price_service = self.env['gold.price.service']
+                    base_gold_price = gold_price_service.get_current_gold_price()
+                    for record in records:
+                        update_vals = record._get_gold_price_update_vals(
+                            base_gold_price
+                        )
+                        if update_vals:
+                            record.with_context(
+                                skip_gold_price_update=True
+                            ).write(update_vals)
 
-                for record in records:
-                    update_vals = record._get_gold_price_update_vals(
-                        base_gold_price)
-                    if update_vals:
-                        record.with_context(
-                            skip_gold_price_update=True).write(update_vals)
-
-        if not self.env.context.get('skip_diamond_price_update'):
-            if any(self.DIAMOND_PRICE_UPDATE_FIELDS & vals.keys() for vals in vals_list):
-                for record in records:
-                    update_vals = record._get_diamond_price_update_vals()
-                    if update_vals:
-                        record.with_context(
-                            skip_diamond_price_update=True).write(update_vals)
-
+            if not self.env.context.get('skip_diamond_price_update'):
+                if any(
+                    self.DIAMOND_PRICE_UPDATE_FIELDS & vals.keys()
+                    for vals in vals_list
+                ):
+                    for record in records:
+                        update_vals = record._get_diamond_price_update_vals()
+                        if update_vals:
+                            record.with_context(
+                                skip_diamond_price_update=True
+                            ).write(update_vals)
+        except Exception as e:
+            raise ValidationError(
+                _('Product price update failed. Please check gold/diamond '
+                  'settings or try again. Details: %s') % str(e)
+            ) from e
         return records
 
     def write(self, vals):
         res = super().write(vals)
-        if not self.env.context.get('skip_gold_price_update'):
-            if self.GOLD_PRICE_UPDATE_FIELDS & set(vals.keys()):
-                gold_price_service = self.env['gold.price.service']
-                base_gold_price = gold_price_service.get_current_gold_price()
+        try:
+            if not self.env.context.get('skip_gold_price_update'):
+                if self.GOLD_PRICE_UPDATE_FIELDS & set(vals.keys()):
+                    gold_price_service = self.env['gold.price.service']
+                    base_gold_price = (
+                        gold_price_service.get_current_gold_price()
+                    )
+                    for record in self:
+                        update_vals = record._get_gold_price_update_vals(
+                            base_gold_price
+                        )
+                        if update_vals:
+                            record.with_context(
+                                skip_gold_price_update=True
+                            ).write(update_vals)
 
-                for record in self:
-                    update_vals = record._get_gold_price_update_vals(
-                        base_gold_price)
-                    if update_vals:
-                        record.with_context(
-                            skip_gold_price_update=True).write(update_vals)
-
-        if not self.env.context.get('skip_diamond_price_update'):
-            if self.DIAMOND_PRICE_UPDATE_FIELDS & set(vals.keys()):
-                for record in self:
-                    update_vals = record._get_diamond_price_update_vals()
-                    if update_vals:
-                        record.with_context(
-                            skip_diamond_price_update=True).write(update_vals)
-
+            if not self.env.context.get('skip_diamond_price_update'):
+                if self.DIAMOND_PRICE_UPDATE_FIELDS & set(vals.keys()):
+                    for record in self:
+                        update_vals = record._get_diamond_price_update_vals()
+                        if update_vals:
+                            record.with_context(
+                                skip_diamond_price_update=True
+                            ).write(update_vals)
+        except Exception as e:
+            raise ValidationError(
+                _('Product price update failed. Please check gold/diamond '
+                  'settings or try again. Details: %s') % str(e)
+            ) from e
         return res
 
     @api.constrains('gold_weight_g', 'gold_type', 'gold_purity')
