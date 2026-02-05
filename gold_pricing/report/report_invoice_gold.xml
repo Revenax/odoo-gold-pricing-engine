@@ -1,6 +1,10 @@
 <?xml version="1.0" encoding="utf-8"?>
 <odoo>
     <template id="report_invoice_document_gold" inherit_id="account.report_invoice_document">
+        <!-- Use gold layout (no header, A5) instead of company default -->
+        <xpath expr="//t[@t-call='web.external_layout']" position="attributes">
+            <attribute name="t-call">gold_pricing.external_layout_gold</attribute>
+        </xpath>
         <!-- Hide partner (customer) address/name block - we only show customer in "Invoice to:" -->
         <xpath expr="//div[@name='no_shipping']" position="replace">
             <div name="no_shipping" class="offset-col-6 col-6"/>
@@ -15,12 +19,9 @@
         <xpath expr="//div[@name='shipping_address_block']" position="replace">
             <div name="shipping_address_block"/>
         </xpath>
-        <!-- Hide external layout header; add top spacing for logo -->
+        <!-- Invoice-specific styles (header is hidden by gold_pricing.external_layout_gold) -->
         <xpath expr="(//div[contains(@class, 'row')])[1]" position="before">
             <style><![CDATA[
-                .o_standard_header, .o_background_header, .o_clean_header, .o_boxed_header,
-                .o_report_layout_standard > div:first-child:not(.page),
-                div[class*='external_layout'][class*='header'] { display: none !important; }
                 .o_invoice_to_block { padding: 0.5rem 0; }
                 .o_invoice_to_label {
                     font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.05em;
@@ -78,15 +79,8 @@
         <!-- Remove Taxes cell and the t-set for taxes from product line -->
         <xpath expr="//td[@name='td_taxes']" position="replace"/>
         <xpath expr="//t[@t-set='taxes'][@t-value]" position="replace"/>
-        <!-- Replace full tax totals block with only Total row (tax_totals already set above) -->
-        <xpath expr="//t[@t-call='account.document_tax_totals']" position="replace">
-            <tr class="border-black o_total">
-                <td><strong>Total</strong></td>
-                <td class="text-end">
-                    <span t-out="tax_totals.get('formatted_amount_total')"/>
-                </td>
-            </tr>
-        </xpath>
+        <!-- Remove Payment Communication block (div containing p name="payment_communication") -->
+        <xpath expr="//p[@name='payment_communication']/parent::div" position="replace"/>
     </template>
     <!-- Hide tax breakdown in company-currency block (when invoice currency != company currency) -->
     <template id="document_tax_totals_company_currency_gold" inherit_id="account.document_tax_totals_company_currency_template">
