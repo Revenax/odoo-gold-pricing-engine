@@ -15,17 +15,17 @@
         <xpath expr="//div[@name='shipping_address_block']" position="replace">
             <div name="shipping_address_block"/>
         </xpath>
-        <!-- Hide external layout header (removes "Administrator" / document title above invoice) and add top spacing -->
+        <!-- Hide external layout header; add top spacing for logo -->
         <xpath expr="(//div[contains(@class, 'row')])[1]" position="before">
-            <style>
+            <style><![CDATA[
                 .o_standard_header, .o_background_header, .o_clean_header, .o_boxed_header,
-                .o_report_layout_standard &gt; div:first-child:not(.page),
+                .o_report_layout_standard > div:first-child:not(.page),
                 div[class*='external_layout'][class*='header'] { display: none !important; }
-            </style>
+            ]]></style>
             <div style="min-height: 20px;" class="o_report_logo_space"/>
         </xpath>
         <!-- Invoice to: customer name and number (mandatory display) -->
-        <xpath expr="//div[@id='informations']" position="before">
+        <xpath expr="//div[@id='informations']" position="replace">
             <div class="row mb-4" name="invoice_to_block">
                 <div class="col-6">
                     <strong>Invoice to:</strong>
@@ -40,14 +40,6 @@
                 </div>
             </div>
         </xpath>
-        <!-- Format invoice date as dd-MMM-yy in the informations block (if still shown there) -->
-        <xpath expr="//div[@name='invoice_date']//span[@t-field='o.invoice_date']" position="attributes">
-            <attribute name="t-options">{'format': 'dd-MMM-yy'}</attribute>
-        </xpath>
-        <!-- Remove Due Date -->
-        <xpath expr="//div[@name='due_date']" position="replace"/>
-        <!-- Remove Amount Due row from payments section (tr containing amount_residual) -->
-        <xpath expr="//tr[.//span[@t-field='o.amount_residual']]" position="replace"/>
         <!-- Add Purity and Weight columns to main table header (after Description) -->
         <xpath expr="//th[@name='th_description']" position="after">
             <th name="th_purity" class="text-end"><span>Purity</span></th>
