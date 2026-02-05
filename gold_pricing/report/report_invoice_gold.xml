@@ -19,9 +19,12 @@
         <xpath expr="//div[@name='shipping_address_block']" position="replace">
             <div name="shipping_address_block"/>
         </xpath>
-        <!-- Invoice-specific styles (header is hidden by gold_pricing.external_layout_gold) -->
+        <!-- Invoice styles + hide layout header and set body font (layout has no reliable xpath across versions) -->
         <xpath expr="(//div[contains(@class, 'row')])[1]" position="before">
             <style><![CDATA[
+                body { font-size: 11px; }
+                .o_standard_header, .o_background_header, .o_clean_header, .o_boxed_header,
+                div[class*='external_layout'][class*='header'] { display: none !important; }
                 .o_invoice_to_block { padding: 0.5rem 0; }
                 .o_invoice_to_label {
                     font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.05em;

@@ -1,19 +1,10 @@
 <?xml version="1.0" encoding="utf-8"?>
 <odoo>
     <!--
-        Gold invoice layout: no header, A5 paper.
-        Used by report_invoice_document_gold via t-call override.
+        Gold invoice layout: same as standard (A5 via report.paperformat, header hidden via CSS in report body).
+        Used by report_invoice_document_gold via t-call override. No xpath here: layout structure
+        varies by Odoo version; header hiding and body font are in report_invoice_gold.xml style block.
     -->
     <template id="external_layout_gold" inherit_id="web.external_layout_standard" name="Gold external layout (no header, A5)">
-        <!-- A5 and margins via report.paperformat; here only hide header and set body font -->
-        <xpath expr="//div[contains(@class, 'o_report_layout')]" position="before">
-            <style><![CDATA[
-                body { font-size: 11px; }
-                .o_standard_header, .o_background_header, .o_clean_header, .o_boxed_header,
-                div[class*='external_layout'][class*='header'] {
-                    display: none !important;
-                }
-            ]]></style>
-        </xpath>
     </template>
 </odoo>
