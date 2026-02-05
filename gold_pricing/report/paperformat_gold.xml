@@ -1,5 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <odoo>
+    <!-- A5 paper format for gold invoices. Assign to invoice report: Settings > Technical > Reports > Invoice > Paper Format = Gold Invoice A5 -->
     <data noupdate="0">
         <record id="paperformat_gold_a5" model="report.paperformat">
             <field name="name">Gold Invoice A5</field>
@@ -12,11 +13,6 @@
             <field name="header_line" eval="False"/>
             <field name="header_spacing">0</field>
             <field name="dpi">90</field>
-        </record>
-
-        <!-- Use A5 paper for the customer invoice report (used by gold invoice template). -->
-        <record id="account.action_report_invoice" model="ir.actions.report">
-            <field name="paperformat_id" ref="gold_pricing.paperformat_gold_a5"/>
         </record>
     </data>
 </odoo>
