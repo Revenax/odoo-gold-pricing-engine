@@ -87,43 +87,6 @@
                 </td>
             </tr>
         </xpath>
-        <!-- Page container: flex column so footer can sit at bottom -->
-        <xpath expr="//div[contains(@class, 'page') and contains(@class, 'mb-4')]" position="attributes">
-            <attribute name="style">min-height: 88vh; display: flex; flex-direction: column;</attribute>
-        </xpath>
-        <!-- Spacer to push footer to bottom of page -->
-        <xpath expr="//div[@id='payment_term']" position="after">
-            <div style="min-height: 30vh; flex: 1 1 auto;" class="o_report_footer_spacer"/>
-        </xpath>
-        <!-- Footer: company phone, address, email, website (at bottom) -->
-        <xpath expr="//div[@id='payment_term']" position="after">
-            <div class="mt-4 pt-3 border-top" style="border-top: 1px solid #dee2e6 !important;">
-                <div class="row text-center small">
-                    <div class="col-4">
-                        <t t-if="o.company_id.phone">
-                            <span t-field="o.company_id.phone"/>
-                        </t>
-                    </div>
-                    <div class="col-4">
-                        <t t-if="o.company_id.street or o.company_id.city">
-                            <span t-field="o.company_id.street"/>
-                            <t t-if="o.company_id.street and o.company_id.city">, </t>
-                            <span t-field="o.company_id.city"/>
-                            <t t-if="o.company_id.country_id">, <span t-field="o.company_id.country_id.name"/></t>
-                        </t>
-                    </div>
-                    <div class="col-4">
-                        <t t-if="o.company_id.email">
-                            <span t-field="o.company_id.email"/>
-                        </t>
-                        <t t-if="o.company_id.email and o.company_id.website"> | </t>
-                        <t t-if="o.company_id.website">
-                            <span t-field="o.company_id.website"/>
-                        </t>
-                    </div>
-                </div>
-            </div>
-        </xpath>
     </template>
     <!-- Hide tax breakdown in company-currency block (when invoice currency != company currency) -->
     <template id="document_tax_totals_company_currency_gold" inherit_id="account.document_tax_totals_company_currency_template">
