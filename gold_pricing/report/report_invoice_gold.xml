@@ -21,18 +21,37 @@
                 .o_standard_header, .o_background_header, .o_clean_header, .o_boxed_header,
                 .o_report_layout_standard > div:first-child:not(.page),
                 div[class*='external_layout'][class*='header'] { display: none !important; }
+                .o_invoice_to_block { padding: 0.5rem 0; }
+                .o_invoice_to_label {
+                    font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.05em;
+                    color: #6c757d; margin-bottom: 0.25rem; font-weight: 600;
+                }
+                .o_invoice_to_name {
+                    font-size: 1rem; font-weight: 600; color: #212529; margin-bottom: 0.35rem;
+                }
+                .o_invoice_to_contact {
+                    font-size: 0.875rem; color: #495057;
+                }
+                .o_invoice_to_contact .o_invoice_to_phone,
+                .o_invoice_to_contact .o_invoice_to_mobile { font-weight: 500; }
             ]]></style>
             <div style="min-height: 20px;" class="o_report_logo_space"/>
         </xpath>
-        <!-- Invoice to: customer name and number (mandatory display) -->
+        <!-- Invoice to: customer name on first row, phone/mobile on second row -->
         <xpath expr="//div[@id='informations']" position="replace">
             <div class="row mb-4" name="invoice_to_block">
-                <div class="col-6">
-                    <strong>Invoice to:</strong>
-                    <t t-if="o.partner_id.phone"><span t-field="o.partner_id.phone"/></t>
-                    <t t-elif="o.partner_id.mobile"><span t-field="o.partner_id.mobile"/></t>
-                    <t t-if="o.partner_id.phone or o.partner_id.mobile"> </t>
-                    <span t-field="o.partner_id.name"/>
+                <div class="col-6 o_invoice_to_block">
+                    <div class="o_invoice_to_label">Invoice to:</div>
+                    <div class="o_invoice_to_name"><span t-field="o.partner_id.name"/></div>
+                    <div class="o_invoice_to_contact">
+                        <t t-if="o.partner_id.phone">
+                            <span class="o_invoice_to_phone">Tel: <span t-field="o.partner_id.phone"/></span>
+                        </t>
+                        <t t-if="o.partner_id.phone and o.partner_id.mobile"> | </t>
+                        <t t-if="o.partner_id.mobile">
+                            <span class="o_invoice_to_mobile">Mobile: <span t-field="o.partner_id.mobile"/></span>
+                        </t>
+                    </div>
                 </div>
                 <div class="col-6 text-end">
                     <strong>Date:</strong>
