@@ -37,12 +37,7 @@
                     padding-bottom: 1rem; margin-bottom: 1rem;
                     border-bottom: 1px solid #e5e7eb;
                 }
-                table[name="invoice_line_table"] {
-                    margin-top: 0.25rem;
-                    border-top: 1px solid #e5e7eb;
-                    padding-top: 0.5rem;
-                }
-                #right-elements, #total { border-top: 1px solid #e5e7eb; padding-top: 0.5rem; margin-top: 0.5rem; }
+                table[name="invoice_line_table"] { margin-top: 0.25rem; }
                 .o_invoice_to_block { padding: 0.5rem 0; }
                 .o_invoice_to_label {
                     font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.05em;

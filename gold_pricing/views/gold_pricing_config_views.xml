@@ -124,6 +124,18 @@
                                 </div>
                             </div>
                         </div>
+                        <div class="col-12 col-lg-6 o_setting_box">
+                            <div class="o_setting_left_pane"/>
+                            <div class="o_setting_right_pane">
+                                <label for="global_diamond_discount"/>
+                                <div class="text-muted">
+                                    Discount percentage (0-80). E.g. 40 = 40% off. Sale = (USD x USD/EGP rate) x (100 - discount) / 100.
+                                </div>
+                                <div class="content-group">
+                                    <field name="global_diamond_discount"/>
+                                </div>
+                            </div>
+                        </div>
                     </div>
                 </div>
                 <div class="app_settings_block" data-string="Point of Sale" data-key="point_of_sale_gold_pricing">

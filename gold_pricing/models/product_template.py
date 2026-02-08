@@ -211,7 +211,9 @@ class ProductTemplate(models.Model):
 
         diamond_price_service = self.env['diamond.price.service']
         exchange_rate = diamond_price_service.get_usd_to_egp_rate()
-        price_egp = self.diamond_usd_price * exchange_rate
+        discount_pct = diamond_price_service.get_global_diamond_discount()
+        price_egp = (self.diamond_usd_price * exchange_rate) * \
+            (100 - discount_pct) / 100.0
 
         return {
             'list_price': price_egp,

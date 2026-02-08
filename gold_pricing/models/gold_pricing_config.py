@@ -4,6 +4,7 @@
 # Website: https://www.revenax.com
 
 from odoo import api, fields, models
+from odoo.exceptions import ValidationError
 
 
 class ResConfigSettings(models.TransientModel):
@@ -68,6 +69,23 @@ class ResConfigSettings(models.TransientModel):
         default=0.0,
         help='Markup per gram for gold coins',
     )
+
+    global_diamond_discount = fields.Integer(
+        string='Global Diamond Discount',
+        config_parameter='gold_pricing.global_diamond_discount',
+        default=40,
+        help='Discount percentage (0-80). Sale price = (USD x USD/EGP rate) x (100 - discount) / 100. E.g. 40 = 40%% off.',
+    )
+
+    @api.constrains('global_diamond_discount')
+    def _check_global_diamond_discount(self):
+        for record in self:
+            if record.global_diamond_discount is not False and (
+                record.global_diamond_discount < 0 or record.global_diamond_discount > 80
+            ):
+                raise ValidationError(
+                    'Global Diamond Discount must be between 0 and 80.'
+                )
 
     pos_config_id = fields.Many2one(
         comodel_name="pos.config",
