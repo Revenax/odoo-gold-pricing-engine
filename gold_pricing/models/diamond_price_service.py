@@ -13,11 +13,16 @@ class DiamondPriceService(models.Model):
     def get_current_diamond_price_usd(self):
         """
         Placeholder for diamond price API.
+        Override to fetch real data. Return None when no API data is available.
 
         Returns:
-            float: Diamond price in USD
+            float|None: Diamond price in USD, or None if no global source (keep per-product prices)
         """
-        return 50.0
+        return None
+
+    def _has_global_diamond_price_api(self):
+        """True if a global diamond price is used (cron may overwrite product diamond_usd_price)."""
+        return self.get_current_diamond_price_usd() is not None
 
     def get_usd_to_egp_rate(self):
         """
@@ -47,14 +52,15 @@ class DiamondPriceService(models.Model):
 
     def update_all_diamond_product_prices(self):
         """
-        Update prices for all diamond products using the latest USD price.
+        Update prices for all diamond products.
+        When a global diamond price API is available, overwrites diamond_usd_price and list_price.
+        When not (placeholder), only refreshes list_price from each product's diamond_usd_price.
 
         :return: dict - Execution summary
         """
         price_usd = self.get_current_diamond_price_usd()
         exchange_rate = self.get_usd_to_egp_rate()
         discount_pct = self.get_global_diamond_discount()
-        price_egp = (price_usd * exchange_rate) * (100 - discount_pct) / 100.0
 
         diamond_products = self.env['product.template'].search([
             ('is_diamond_product', '=', True),
@@ -68,17 +74,36 @@ class DiamondPriceService(models.Model):
                 'message': 'No diamond products found',
             }
 
+        if self._has_global_diamond_price_api():
+            price_egp = (price_usd * exchange_rate) * \
+                (100 - discount_pct) / 100.0
+            for product in diamond_products:
+                product.with_context(skip_diamond_price_update=True).write({
+                    'diamond_usd_price': price_usd,
+                    'list_price': price_egp,
+                })
+            return {
+                'success': True,
+                'products_updated': len(diamond_products),
+                'price_usd': price_usd,
+                'price_egp': price_egp,
+                'exchange_rate': exchange_rate,
+                'message': f'Successfully updated {len(diamond_products)} products',
+            }
+
         for product in diamond_products:
-            product.with_context(skip_diamond_price_update=True).write({
-                'diamond_usd_price': price_usd,
-                'list_price': price_egp,
-            })
+            if product.diamond_usd_price and product.diamond_usd_price > 0:
+                price_egp = (product.diamond_usd_price * exchange_rate) * (
+                    100 - discount_pct
+                ) / 100.0
+                product.with_context(skip_diamond_price_update=True).write({
+                    'list_price': price_egp,
+                })
 
         return {
             'success': True,
             'products_updated': len(diamond_products),
-            'price_usd': price_usd,
-            'price_egp': price_egp,
+            'price_usd': None,
             'exchange_rate': exchange_rate,
-            'message': f'Successfully updated {len(diamond_products)} products',
+            'message': f'Refreshed list_price for {len(diamond_products)} products (no global price API)',
         }
