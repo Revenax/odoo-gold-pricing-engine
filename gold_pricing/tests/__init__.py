@@ -3,4 +3,4 @@
 # Author: Mohamed A. Abdallah
 # Website: https://www.revenax.com
 
-from . import test_require_customer
+from . import test_cron, test_require_customer
