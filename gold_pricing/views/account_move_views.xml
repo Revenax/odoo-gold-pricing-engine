@@ -1,0 +1,39 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <!--
+        Extend invoice line views to expose gold-specific fields on all invoice lines.
+        This allows manual entry of purity and weight for both inventory and
+        unregistered gold items. Reporting already uses these fields via the
+        gold invoice report template.
+    -->
+
+    <!-- Invoice line tree (list) view: add Purity and Weight columns -->
+    <record id="view_move_line_tree_gold_pricing" model="ir.ui.view">
+        <field name="name">account.move.line.tree.gold.pricing</field>
+        <field name="model">account.move.line</field>
+        <field name="inherit_id" ref="account.view_move_line_tree"/>
+        <field name="arch" type="xml">
+            <!-- Insert after Description to align with report layout -->
+            <xpath expr="//field[@name='name']" position="after">
+                <field name="gold_purity"/>
+                <field name="gold_weight_g"/>
+            </xpath>
+        </field>
+    </record>
+
+    <!-- Invoice line form view: add Purity and Weight fields -->
+    <record id="view_move_line_form_gold_pricing" model="ir.ui.view">
+        <field name="name">account.move.line.form.gold.pricing</field>
+        <field name="model">account.move.line</field>
+        <field name="inherit_id" ref="account.view_move_line_form"/>
+        <field name="arch" type="xml">
+            <!-- Place near Description so users see gold data alongside core fields -->
+            <xpath expr="//field[@name='name']" position="after">
+                <field name="gold_purity"/>
+                <field name="gold_weight_g"/>
+            </xpath>
+        </field>
+    </record>
+
+</odoo>
+
