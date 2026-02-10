@@ -7,12 +7,11 @@
         <!-- Set company for layout (invoice report passes o=move; standard layout passes it via web.external_layout) -->
         <xpath expr="//div[contains(@t-attf-class, 'o_company_')]" position="before">
             <t t-set="company" t-value="o and o.company_id or res_company"/>
-            <!-- <style><![CDATA[
-                .o_standard_header, .o_background_header, .o_clean_header, .o_boxed_header,
-                div[class*='external_layout'][class*='header'] { display: none !important; }
-                .o_standard_footer, .o_clean_footer, .o_boxed_footer, .o_background_footer,
-                div[class*='footer']:not([class*='header']) { display: block !important; visibility: visible !important; }
-            ]]></style> -->
+            <style><![CDATA[
+                .header[class*='o_company_'][class*='_layout'] {
+                    display: none !important;
+                }
+            ]]></style>
         </xpath>
     </template>
 </odoo>
