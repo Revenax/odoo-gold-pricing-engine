@@ -20,7 +20,7 @@
             <div name="shipping_address_block"/>
         </xpath>
         <!-- Invoice body: zero margins so paper format controls page margins; minimal overrides -->
-        <xpath expr="(//div[contains(@class, 'row')])[1]" position="before">
+        <!-- <xpath expr="(//div[contains(@class, 'row')])[1]" position="before">
             <style><![CDATA[
                 body { margin: 0; padding: 0; }
                 .page.mb-4, .mt-5.clearfix { margin: 0; padding: 0; }
@@ -30,7 +30,7 @@
                 .o_invoice_to_contact .o_invoice_to_mobile { font-weight: 500; }
             ]]></style>
             <div class="o_report_logo_space"/>
-        </xpath>
+        </xpath> -->
         <!-- Invoice to: customer name on first row, phone/mobile on second row -->
         <xpath expr="//div[@id='informations']" position="replace">
             <div class="row" name="invoice_to_block">
