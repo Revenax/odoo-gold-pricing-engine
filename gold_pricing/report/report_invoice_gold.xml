@@ -19,36 +19,13 @@
         <xpath expr="//div[@name='shipping_address_block']" position="replace">
             <div name="shipping_address_block"/>
         </xpath>
-        <!-- Invoice styles: hide header only, show footer, relaxed layout, section lines, consistent left alignment -->
+        <!-- Invoice body: zero margins so paper format controls page margins; minimal overrides -->
         <xpath expr="(//div[contains(@class, 'row')])[1]" position="before">
             <style><![CDATA[
-                body { font-size: 11px; margin: 0; padding: 0; }
-                .o_standard_header, .o_background_header, .o_clean_header, .o_boxed_header,
-                div[class*='external_layout'][class*='header'] { display: none !important; }
-                .o_standard_footer, .o_clean_footer, .o_boxed_footer, .o_background_footer,
-                div[class*='footer']:not([class*='header']) { display: block !important; visibility: visible !important; }
-                .page.mb-4 { max-width: none; padding-left: 10mm; padding-right: 10mm; }
-                .mt-5.clearfix { max-width: none; }
-                .o_report_logo_space {
-                    min-height: 20px; padding-bottom: 0.5rem; margin-bottom: 0.5rem;
-                    border-bottom: 1px solid #e5e7eb;
-                }
-                div[name="invoice_to_block"] {
-                    padding-bottom: 1rem; margin-bottom: 1rem;
-                    border-bottom: 1px solid #e5e7eb;
-                }
-                table[name="invoice_line_table"] { margin-top: 0.25rem; }
-                .o_invoice_to_block { padding: 0.5rem 0; }
-                .o_invoice_to_label {
-                    font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.05em;
-                    color: #6c757d; margin-bottom: 0.25rem; font-weight: 600;
-                }
-                .o_invoice_to_name {
-                    font-size: 1rem; font-weight: 600; color: #212529; margin-bottom: 0.35rem;
-                }
-                .o_invoice_to_contact {
-                    font-size: 0.875rem; color: #495057;
-                }
+                body { margin: 0; padding: 0; }
+                .page.mb-4, .mt-5.clearfix { margin: 0; padding: 0; }
+                .o_invoice_to_label { text-transform: uppercase; letter-spacing: 0.05em; color: #6c757d; font-weight: 600; }
+                .o_invoice_to_name { font-weight: 600; color: #212529; }
                 .o_invoice_to_contact .o_invoice_to_phone,
                 .o_invoice_to_contact .o_invoice_to_mobile { font-weight: 500; }
             ]]></style>
@@ -56,7 +33,7 @@
         </xpath>
         <!-- Invoice to: customer name on first row, phone/mobile on second row -->
         <xpath expr="//div[@id='informations']" position="replace">
-            <div class="row mb-4" name="invoice_to_block">
+            <div class="row" name="invoice_to_block">
                 <div class="col-6 o_invoice_to_block">
                     <div class="o_invoice_to_label">Invoice to:</div>
                     <div class="o_invoice_to_name"><span t-field="o.partner_id.name"/></div>
