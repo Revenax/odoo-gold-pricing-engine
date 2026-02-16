@@ -52,6 +52,23 @@
             <th name="th_purity" class="text-end"><span>Purity</span></th>
             <th name="th_weight" class="text-end"><span>Weight (g)</span></th>
         </xpath>
+
+        <!-- Our custom payment block -->
+        <xpath expr="//div[contains(@class, 'ms-auto')]" position="replace">
+            <div class="ms-auto">
+                <table class="table table-sm table-borderless avoid-page-break-inside">
+                    <!-- Custom Total Amount -->
+                    <tr class="border-black fw-bold">
+                        <td>Total Amount</td>
+                        <td class="text-end">
+                            <span t-field="o.amount_total"
+                                t-options="{'widget': 'monetary', 'display_currency': o.currency_id}"/>
+                        </td>
+                    </tr>
+                </table>
+            </div>
+        </xpath>
+
         <!-- Remove Taxes column from header -->
         <xpath expr="//th[@name='th_taxes']" position="replace"/>
         <!-- Add Purity and Weight cells to each product line (after Description) -->
