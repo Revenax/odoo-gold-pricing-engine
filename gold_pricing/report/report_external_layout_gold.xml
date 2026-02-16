@@ -1,39 +1,8 @@
 <?xml version="1.0" encoding="utf-8"?>
 <odoo>
-    <!-- Custom footer for external report layout (boxed). -->
-    <template id="external_layout_footer_boxed" inherit_id="web.external_layout_boxed">
-        <xpath expr="//div[contains(@class, 'footer')]" position="inside">
-            <div style="width:100%; border-top:1px solid #ccc; padding-top:8px; font-size:10px; text-align:center;">
-                <strong>Thank you for your business</strong><br/>
-                Marjaan Jewellery — Crafted with precision and trust
-            </div>
-        </xpath>
-    </template>
-
-    <!-- Custom footer for external report layout (standard). -->
-    <template id="external_layout_footer_standard" inherit_id="web.external_layout_standard">
-        <xpath expr="//div[contains(@class, 'footer')]" position="inside">
-            <div style="width:100%; border-top:1px solid #ccc; padding-top:8px; font-size:10px; text-align:center;">
-                <strong>Thank you for your business</strong><br/>
-                Marjaan Jewellery — Crafted with precision and trust
-            </div>
-        </xpath>
-    </template>
-
-    <!-- Custom footer for external report layout (bold/clean). -->
-    <template id="external_layout_footer_bold" inherit_id="web.external_layout_bold">
-        <xpath expr="//div[contains(@class, 'footer')]" position="inside">
-            <div style="width:100%; border-top:1px solid #ccc; padding-top:8px; font-size:10px; text-align:center;">
-                <strong>Thank you for your business</strong><br/>
-                Marjaan Jewellery — Crafted with precision and trust
-            </div>
-        </xpath>
-    </template>
-
-    <!-- Custom footer for external report layout (striped). -->
-    <template id="external_layout_footer_striped" inherit_id="web.external_layout_striped">
-        <xpath expr="//div[contains(@class, 'footer')]" position="inside">
-            <div style="width:100%; border-top:1px solid #ccc; padding-top:8px; font-size:10px; text-align:center;">
+    <template id="custom_external_layout_footer" inherit_id="web.external_layout_standard">
+        <xpath expr="//div[contains(@class,'article')]" position="inside">
+            <div style="border-top:1px solid #ccc; margin-top:20px; padding-top:8px; font-size:10px; text-align:center;">
                 <strong>Thank you for your business</strong><br/>
                 Marjaan Jewellery — Crafted with precision and trust
             </div>
