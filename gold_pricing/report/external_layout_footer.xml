@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <template id="external_layout_footer_gold" inherit_id="web.external_layout_standard">
+        <xpath expr="//div[contains(@class, 'footer')]" position="inside">
+            <div style="text-align:center; font-size:10px; margin-top:4mm;">
+                <div>Thank you for your business</div>
+                <div>Marjaan Jewellery — Crafted with precision and trust</div>
+            </div>
+        </xpath>
+    </template>
+</odoo>

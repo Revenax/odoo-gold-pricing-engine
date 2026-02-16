@@ -87,13 +87,5 @@
         <xpath expr="//t[@t-set='taxes'][@t-value]" position="replace"/>
         <!-- Remove Payment Communication block (div containing p name="payment_communication") -->
         <xpath expr="//p[@name='payment_communication']/parent::div" position="replace"/>
-
-        <!-- Footer at end of invoice body (visible even when external layout is not used). -->
-        <xpath expr="//div[contains(@class, 'page') and contains(@class, 'mb-4')]" position="inside">
-            <div style="border-top:1px solid #ccc; margin-top:20px; padding-top:8px; font-size:10px; text-align:center;">
-                <strong>Thank you for your business</strong><br/>
-                Marjaan Jewellery — Crafted with precision and trust
-            </div>
-        </xpath>
     </template>
 </odoo>
