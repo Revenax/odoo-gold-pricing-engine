@@ -88,10 +88,4 @@
         <!-- Remove Payment Communication block (div containing p name="payment_communication") -->
         <xpath expr="//p[@name='payment_communication']/parent::div" position="replace"/>
     </template>
-    <!-- Hide tax breakdown in company-currency block (when invoice currency != company currency) -->
-    <template id="document_tax_totals_company_currency_gold" inherit_id="account.document_tax_totals_company_currency_template">
-        <xpath expr="//div[contains(@class, 'totals_taxes_company_currency')]" position="replace">
-            <div class="oe_structure"/>
-        </xpath>
-    </template>
 </odoo>
