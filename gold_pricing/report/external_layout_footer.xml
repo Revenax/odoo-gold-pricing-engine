@@ -1,7 +1,36 @@
 <?xml version="1.0" encoding="utf-8"?>
+<!-- Custom footer in external layout (bottom of every PDF page).
+     Layout must be enabled: Settings → Companies → Configure Document Layout → choose Standard (or add same footer for Striped/Bold/Boxed). See docs/INVOICE_LAYOUT_SETUP.md. -->
 <odoo>
     <template id="external_layout_footer_gold" inherit_id="web.external_layout_standard">
-        <xpath expr="//div[contains(@class, 'footer')]" position="inside">
+        <xpath expr="//div[contains(@t-attf-class, 'footer')]" position="inside">
+            <div style="text-align:center; font-size:10px; margin-top:4mm;">
+                <div>Thank you for your business</div>
+                <div>Marjaan Jewellery — Crafted with precision and trust</div>
+            </div>
+        </xpath>
+    </template>
+
+    <template id="external_layout_footer_gold_striped" inherit_id="web.external_layout_striped">
+        <xpath expr="//div[contains(@t-attf-class, 'footer')]" position="inside">
+            <div style="text-align:center; font-size:10px; margin-top:4mm;">
+                <div>Thank you for your business</div>
+                <div>Marjaan Jewellery — Crafted with precision and trust</div>
+            </div>
+        </xpath>
+    </template>
+
+    <template id="external_layout_footer_gold_bold" inherit_id="web.external_layout_bold">
+        <xpath expr="//div[contains(@t-attf-class, 'footer')]" position="inside">
+            <div style="text-align:center; font-size:10px; margin-top:4mm;">
+                <div>Thank you for your business</div>
+                <div>Marjaan Jewellery — Crafted with precision and trust</div>
+            </div>
+        </xpath>
+    </template>
+
+    <template id="external_layout_footer_gold_boxed" inherit_id="web.external_layout_boxed">
+        <xpath expr="//div[contains(@t-attf-class, 'footer')]" position="inside">
             <div style="text-align:center; font-size:10px; margin-top:4mm;">
                 <div>Thank you for your business</div>
                 <div>Marjaan Jewellery — Crafted with precision and trust</div>
