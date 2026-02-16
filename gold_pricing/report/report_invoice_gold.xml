@@ -69,8 +69,6 @@
             </div>
         </xpath>
 
-        <!-- Remove Taxes column from header -->
-        <xpath expr="//th[@name='th_taxes']" position="replace"/>
         <!-- Add Purity and Weight cells to each product line (after Description) -->
         <xpath expr="//td[@name='account_invoice_line_name']" position="after">
             <td name="td_purity" class="text-end">
@@ -80,6 +78,10 @@
                 <span t-field="line.gold_weight_g"/>
             </td>
         </xpath>
+
+        <!-- Remove Taxes column from header -->
+        <xpath expr="//th[@name='th_taxes']" position="replace"/>
+
         <!-- Remove Taxes cell and the t-set for taxes from product line -->
         <xpath expr="//td[@name='td_taxes']" position="replace"/>
         <xpath expr="//t[@t-set='taxes'][@t-value]" position="replace"/>
