@@ -40,7 +40,6 @@
         'views/account_move_views.xml',
         'report/paperformat_gold.xml',
         'report/report_invoice_gold.xml',
-        'report/report_external_layout_gold.xml',
         'data/gold_pricing_cron.xml',
     ],
     'assets': {
