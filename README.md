@@ -79,8 +79,8 @@ gold_pricing/
    - Configure the following:
 
      **API Configuration:**
-     - **Gold API Endpoint**: URL endpoint for fetching gold prices
-     - **Gold API Cookie**: Cookie value for API authentication
+     - **Gold API Endpoint**: URL for fetching gold prices (GET request; response must be HTML/text with 200)
+     - **Gold 21K Regex Formula**: Regular expression applied to the response to extract the 21K price per gram (use one capturing group for the number)
      - **Fallback Gold Price**: Price per gram when API is unavailable
 
      **Markup per Gram by Gold Type:**
@@ -94,8 +94,8 @@ gold_pricing/
 
    ```python
    # API Configuration
-   self.env['ir.config_parameter'].sudo().set_param('gold_api_endpoint', 'https://your-api.com/gold/price')
-   self.env['ir.config_parameter'].sudo().set_param('gold_api_cookie', 'your-cookie-value')
+   self.env['ir.config_parameter'].sudo().set_param('gold_pricing.gold_api_endpoint', 'https://your-api.com/gold/price')
+   self.env['ir.config_parameter'].sudo().set_param('gold_pricing.gold_21k_regex_formula', r'(\\d+(?:\\.\\d+)?)')  # example: one capturing group for the price number
    self.env['ir.config_parameter'].sudo().set_param('gold_pricing.fallback_price', '75.0')
    
    # Markup Configuration
@@ -207,30 +207,15 @@ The module enforces pricing rules at both backend and frontend levels:
 
 ## API Integration
 
-### Expected API Response Format
+### Gold Price API
 
-The module expects HTML/text responses with Arabic content. Expected pattern:
+The module fetches the 21K gold price by:
 
-```
-علما بأن سعر البيع لجرام الذهب عيار 21 هو 5415 جنيها
-```
+1. Sending a **GET** request to the URL configured in **Gold API Endpoint**
+2. On **HTTP 200**, treating the response body as HTML/text
+3. Applying the **Gold 21K Regex Formula** from settings to extract the price number (one capturing group recommended, e.g. `(\d+(?:\.\d+)?)` for the 21K price per gram)
 
-The module extracts the 21K gold price using regex pattern: `الذهب عيار 21 هو \d+`
-
-Example: From the text above, it extracts `5415` as the 21K gold price per gram.
-
-### API Authentication
-
-The module uses cookie-based authentication. Set `gold_api_cookie` parameter. The module will:
-
-- Send the cookie in the request headers
-- Include browser-like headers for compatibility
-- Parse HTML/text responses with Arabic text support
-
-Cookie format examples:
-
-- Single cookie: `session_id=abc123`
-- Multiple cookies: `session_id=abc123; auth_token=xyz789`
+No authentication (e.g. cookie) is sent; use a public or pre-authenticated URL if required.
 
 ### Error Handling
 
@@ -281,8 +266,8 @@ The module uses the following purity factors:
    - Verify "Update Gold Product Prices" is active
 
 2. **Check API Configuration**
-   - Verify `gold_api_endpoint` and `gold_api_cookie` in System Parameters
-   - Test API endpoint manually
+   - Verify `gold_pricing.gold_api_endpoint` and `gold_pricing.gold_21k_regex_formula` in System Parameters
+   - Test API endpoint manually (GET; expect 200 and HTML/text)
 
 3. **Check Logs**
    - Settings → Technical → Logging → Log Entries
@@ -457,7 +442,7 @@ Edit calculation logic in:
 
 **Custom API Integration**:
 
-Modify `models/gold_price_service.py` → `_fetch_gold_price_from_api()` to match your API response format.
+Set **Gold API Endpoint** and **Gold 21K Regex Formula** in Settings to match your API (GET, 200 HTML). Use a regex with one capturing group for the 21K price number; no code change required.
 
 ## Testing
 

@@ -8,7 +8,7 @@ import logging
 import requests
 from odoo import models
 
-from ..utils import parse_gold_price_from_text  # noqa: E402
+from ..utils import parse_gold_price_with_regex  # noqa: E402
 
 _logger = logging.getLogger(__name__)
 
@@ -36,12 +36,9 @@ class GoldPriceService(models.Model):
 
     def _fetch_gold_price_from_api(self):
         """
-        Fetch gold price from external API using cookie authentication.
-        Parses Arabic text response to extract 21K gold price.
-
-        Expected API response format (HTML/text with Arabic):
-        "علما بأن سعر البيع لجرام الذهب عيار 21 هو 5415 جنيها"
-        Extracts price after "الذهب عيار 21 هو "
+        Fetch gold price from external API via GET request.
+        On HTTP 200, treats the response body as HTML/text and extracts the 21K
+        price using the configurable regex from settings (Gold 21K Regex Formula).
 
         :return: float - Gold price per gram (21K price)
         """
@@ -49,9 +46,8 @@ class GoldPriceService(models.Model):
             'gold_pricing.gold_api_endpoint',
             ''
         )
-
-        api_cookie = self.env['ir.config_parameter'].sudo().get_param(
-            'gold_pricing.gold_api_cookie',
+        regex_formula = self.env['ir.config_parameter'].sudo().get_param(
+            'gold_pricing.gold_21k_regex_formula',
             ''
         )
 
@@ -62,10 +58,10 @@ class GoldPriceService(models.Model):
                 'Settings → Technical → Parameters → System Parameters'
             )
 
-        if not api_cookie or not api_cookie.strip():
+        if not regex_formula or not regex_formula.strip():
             raise ValueError(
-                'Gold API cookie is not configured. '
-                'Please set the "gold_pricing.gold_api_cookie" system parameter in '
+                'Gold 21K regex formula is not configured. '
+                'Please set the "gold_pricing.gold_21k_regex_formula" system parameter in '
                 'Settings → Technical → Parameters → System Parameters'
             )
 
@@ -80,21 +76,8 @@ class GoldPriceService(models.Model):
 
         timeout = 10
         headers = {
-            'Cookie': api_cookie,
-            'accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8',
-            'accept-language': 'en-US,en;q=0.7',
-            'cache-control': 'max-age=0',
-            'dnt': '1',
+            'accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
             'user-agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/142.0.0.0 Safari/537.36',
-            'sec-ch-ua': '"Chromium";v="142", "Brave";v="142", "Not_A Brand";v="99"',
-            'sec-ch-ua-mobile': '?0',
-            'sec-ch-ua-platform': '"macOS"',
-            'sec-fetch-dest': 'document',
-            'sec-fetch-mode': 'navigate',
-            'sec-fetch-site': 'none',
-            'sec-fetch-user': '?1',
-            'sec-gpc': '1',
-            'upgrade-insecure-requests': '1',
         }
 
         try:
@@ -105,31 +88,34 @@ class GoldPriceService(models.Model):
             )
             response.raise_for_status()
 
-            # Parse as text/HTML (for Arabic text APIs)
             text = response.text
-
-            # Use pure helper function to extract price
-            return parse_gold_price_from_text(text)
+            return parse_gold_price_with_regex(text, regex_formula)
 
         except requests.exceptions.Timeout as e:
             _logger.error('API request timed out after %d seconds', timeout)
-            raise ValueError('Gold API request timed out. Please check network connectivity.') from e
+            raise ValueError(
+                'Gold API request timed out. Please check network connectivity.') from e
         except requests.exceptions.ConnectionError as e:
             _logger.error('Failed to connect to gold API endpoint')
-            raise ValueError('Failed to connect to gold API. Please check endpoint configuration.') from e
+            raise ValueError(
+                'Failed to connect to gold API. Please check endpoint configuration.') from e
         except requests.exceptions.HTTPError as e:
-            _logger.error('API returned HTTP error: %d', e.response.status_code)
-            raise ValueError(f'Gold API returned error status {e.response.status_code}') from e
+            _logger.error('API returned HTTP error: %d',
+                          e.response.status_code)
+            raise ValueError(
+                f'Gold API returned error status {e.response.status_code}') from e
         except requests.exceptions.RequestException as e:
             _logger.error('API request failed: %s', type(e).__name__)
-            raise ValueError('Gold API request failed. Please check configuration and network.') from e
+            raise ValueError(
+                'Gold API request failed. Please check configuration and network.') from e
         except ValueError as e:
-            # Re-raise ValueError from parse_gold_price_from_text
-            _logger.error('Invalid API response format: %s', str(e))
+            _logger.error('Invalid API response or regex: %s', str(e))
             raise
         except (KeyError, AttributeError) as e:
-            _logger.error('Unexpected error parsing API response: %s', type(e).__name__)
-            raise ValueError('Unexpected error while parsing gold API response.') from e
+            _logger.error(
+                'Unexpected error parsing API response: %s', type(e).__name__)
+            raise ValueError(
+                'Unexpected error while parsing gold API response.') from e
 
     def _get_fallback_price(self):
         """

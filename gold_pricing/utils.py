@@ -29,42 +29,64 @@ def get_markup_per_gram(env, gold_type: str) -> float:
         return 0.0
 
 
-def parse_gold_price_from_text(text: str) -> float:
+def parse_gold_price_with_regex(text: str, pattern: str) -> float:
     """
-    Parse gold price from Arabic text response.
+    Extract 21K gold price from text using a configurable regex pattern.
 
-    Expected format: "علما بأن سعر البيع لجرام الذهب عيار 21 هو 5415 جنيها"
-    Extracts number after "الذهب عيار 21 هو "
+    The pattern is applied to the text. If it has a capturing group, the first
+    group is used as the price string; otherwise the full match is used. The
+    result is parsed as a float (supports integers and decimals).
 
     Args:
-        text: HTML/text response containing Arabic text with gold price
+        text: HTML or plain text response (e.g. from Gold API endpoint).
+        pattern: Regular expression that matches the price. Prefer one capturing
+            group containing the number (e.g. r'(\\d+(?:\\.\\d+)?)').
 
     Returns:
-        float: Extracted 21K gold price per gram
+        float: Extracted 21K gold price per gram.
 
     Raises:
-        ValueError: If price cannot be extracted or is invalid
+        ValueError: If pattern is invalid, no match, or parsed value is not a
+            valid positive number.
     """
-    # Primary pattern: extract number after "الذهب عيار 21 هو "
-    match = re.search(r'(?<=الذهب عيار 21 هو )\d+', text)
+    if not pattern or not pattern.strip():
+        raise ValueError('Gold 21K regex formula is empty.')
 
-    if match:
-        price = int(match.group(0))
-        if price <= 0:
-            raise ValueError(f'Invalid price extracted: {price}')
-        return float(price)
+    try:
+        compiled = re.compile(pattern)
+    except re.error as e:
+        raise ValueError(f'Invalid Gold 21K regex formula: {e}') from e
 
-    # Fallback: try to find any large number that might be a price
-    numbers = re.findall(r'\d+', text)
-    if numbers:
-        # Use the largest number found (likely the price)
-        potential_prices = [int(n) for n in numbers if len(n) >= 3]
-        if potential_prices:
-            potential_price = max(potential_prices)
-            if potential_price > 0:
-                return float(potential_price)
+    match = compiled.search(text)
+    if not match:
+        raise ValueError(
+            'Price not found in API response (regex did not match).')
 
-    raise ValueError('Price not found in API response')
+    if match.groups():
+        extracted = match.group(1).strip()
+    else:
+        extracted = match.group(0).strip()
+
+    if not extracted:
+        raise ValueError('Price not found in API response (empty match).')
+
+    # Allow digits and one decimal point; strip other characters for localization
+    normalized = re.sub(r'[^\d.]', '', extracted)
+    if not normalized:
+        raise ValueError(
+            f'Extracted value is not a valid number: {extracted!r}')
+
+    try:
+        price = float(normalized)
+    except ValueError as e:
+        raise ValueError(
+            f'Extracted value is not a valid number: {extracted!r}') from e
+
+    if price <= 0:
+        raise ValueError(
+            f'Invalid price extracted: {price} (must be greater than 0).')
+
+    return price
 
 
 def compute_gold_product_price(
@@ -106,7 +128,8 @@ def compute_gold_product_price(
     if weight_g <= 0:
         raise ValueError(f'Weight must be greater than 0, got: {weight_g}')
     if base_gold_price_21k <= 0:
-        raise ValueError(f'Base gold price must be greater than 0, got: {base_gold_price_21k}')
+        raise ValueError(
+            f'Base gold price must be greater than 0, got: {base_gold_price_21k}')
     if markup_per_gram < 0:
         raise ValueError(f'Markup cannot be negative, got: {markup_per_gram}')
 

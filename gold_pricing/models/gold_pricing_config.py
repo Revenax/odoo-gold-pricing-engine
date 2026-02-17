@@ -16,10 +16,12 @@ class ResConfigSettings(models.TransientModel):
         help='URL endpoint for fetching gold prices from the API',
     )
 
-    gold_api_cookie = fields.Char(
-        string='Gold API Cookie',
-        config_parameter='gold_pricing.gold_api_cookie',
-        help='Cookie value for API authentication',
+    gold_21k_regex_formula = fields.Char(
+        string='Gold 21K Regex Formula',
+        config_parameter='gold_pricing.gold_21k_regex_formula',
+        help='Regular expression applied to the API HTML response to extract the 21K gold '
+             'price per gram. Use one capturing group for the price number (e.g. (\\d+(?:\\.\\d+)?)). '
+             'If no group, the full match is used.',
     )
 
     fallback_price = fields.Float(

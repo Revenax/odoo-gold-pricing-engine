@@ -32,12 +32,12 @@
                         <div class="col-12 col-lg-6 o_setting_box">
                             <div class="o_setting_left_pane"/>
                             <div class="o_setting_right_pane">
-                                <label for="gold_api_cookie"/>
+                                <label for="gold_21k_regex_formula"/>
                                 <div class="text-muted">
-                                    Cookie value for API authentication
+                                    Regex applied to the API HTML to extract 21K price. Use one capturing group for the number.
                                 </div>
                                 <div class="content-group">
-                                    <field name="gold_api_cookie" widget="password"/>
+                                    <field name="gold_21k_regex_formula"/>
                                 </div>
                             </div>
                         </div>
