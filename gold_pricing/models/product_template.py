@@ -55,6 +55,33 @@ class ProductTemplate(models.Model):
         help='Type of gold product. Determines markup per gram from settings.',
     )
 
+    def _register_hook(self):
+        super()._register_hook()
+        # One-time cleanup: convert deprecated ingots/coins to bars so stored values
+        # match the reduced selection (avoids ValueError when opening old records).
+        if self._name != 'product.template':
+            return
+        cr = self.env.cr
+        cr.execute(
+            "SELECT 1 FROM product_template WHERE gold_type IN ('ingots','coins') LIMIT 1"
+        )
+        if cr.fetchone():
+            cr.execute(
+                "UPDATE product_template SET gold_type = 'bars' "
+                "WHERE gold_type IN ('ingots','coins')"
+            )
+            cr.execute(
+                "UPDATE pos_order_line SET gold_type = 'bars' "
+                "WHERE gold_type IN ('ingots','coins')"
+            )
+            cr.execute(
+                "UPDATE account_move_line SET gold_type = 'bars' "
+                "WHERE gold_type IN ('ingots','coins')"
+            )
+            _logger.info(
+                'gold_pricing: migrated gold_type ingots/coins to bars (runtime cleanup)'
+            )
+
     making_fee = fields.Float(
         string='Making Fee',
         digits=(16, 2),
