@@ -2,16 +2,17 @@
 <odoo>
     <template id="report_invoice_document_gold" inherit_id="account.report_invoice_document">
 
-    <xpath expr="//style" position="inside">
-        <style>
+    <!-- Inject custom styles before main content (parent may not have a style node) -->
+    <xpath expr="//div[contains(@class, 'page') and contains(@class, 'mb-4')]" position="before">
+        <style><![CDATA[
             th {
-                font-weight: 700;
-                font-size: 12px;
+                font-weight: 900;
+                font-size: 14px;
             }
             td {
-                font-size: 12px;
+                font-size: 14px;
             }
-        </style>
+        ]]></style>
     </xpath>
 
     <!-- Complete header deletion -->
@@ -19,7 +20,7 @@
 
         <!-- Our custom doc title -->
         <xpath expr="//div[contains(@class, 'page') and contains(@class, 'mb-4')]/h2" position="replace">
-            <h2>
+            <h2 style="margin-bottom: 10px;">
                 <center>
                     <span t-if="not proforma"></span>
                     <span t-else="">PROFORMA</span>
@@ -38,7 +39,7 @@
 
         <!-- Our Custom Info Block -->
         <xpath expr="//div[@id='informations']" position="replace">
-            <div class="row mb-4" name="invoice_to_block">
+            <div class="row mb-4" name="invoice_to_block" style="margin-bottom: 10px;">
                 <div class="col-6 o_invoice_to_block">
                     <div class="o_invoice_to_label">Invoice to:</div>
                     <div class="o_invoice_to_name"><span t-field="o.partner_id.name"/></div>
