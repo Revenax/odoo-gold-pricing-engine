@@ -107,8 +107,8 @@ def compute_gold_product_price(
     Returns:
         tuple: (cost_price, sale_price, min_sale_price)
             - cost_price: Cost price (base × purity_factor × weight)
-            - sale_price: Sale price (cost + markup_total)
-            - min_sale_price: Minimum sale price (cost + markup_total × 0.7)
+            - sale_price: Sale price (cost + markup), rounded to nearest 50
+            - min_sale_price: Minimum sale price (cost + 70% markup), rounded to nearest 50
     """
     # Purity factors mapping (relative to 21K, which is what the API returns)
     # 24K = 8/7 of 21K; 18K = 7/8 of 21K
@@ -158,5 +158,14 @@ def compute_gold_product_price(
     min_sale_price = (cost + (markup_total * Decimal('0.7'))).quantize(
         Decimal('0.01'), rounding=ROUND_HALF_UP
     )
+
+    # Round both to nearest 50 (min_sale first, then sale)
+    round_to_50 = Decimal('50')
+    min_sale_price = (min_sale_price / round_to_50).quantize(
+        Decimal('1'), rounding=ROUND_HALF_UP
+    ) * round_to_50
+    sale_price = (sale_price / round_to_50).quantize(
+        Decimal('1'), rounding=ROUND_HALF_UP
+    ) * round_to_50
 
     return (float(cost), float(sale_price), float(min_sale_price))

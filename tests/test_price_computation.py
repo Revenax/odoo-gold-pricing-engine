@@ -37,8 +37,8 @@ def test_compute_21k_price():
     )
     assert cost == 1000.0
     assert sale == 1050.0
-    # min_sale = cost + 70% of markup_total = 1000 + 0.7 * 50 = 1035
-    assert min_sale == 1035.0
+    # min_sale = 1035 rounded to nearest 50 = 1050
+    assert min_sale == 1050.0
 
 
 def test_compute_24k_price():
@@ -46,9 +46,9 @@ def test_compute_24k_price():
     cost, sale, min_sale = compute_gold_product_price(
         100.0, '24K', 1.0, 10.0
     )
-    # 24K factor 8/7: cost = 100 * 8/7 = 114.29, sale = 114.29 + 10 = 124.29
+    # 24K factor 8/7: cost = 100 * 8/7 = 114.29, sale = 124.29 rounded to 50 = 100
     assert abs(cost - 114.29) < 0.01
-    assert abs(sale - 124.29) < 0.01
+    assert sale == 100.0
 
 
 def test_compute_18k_price():
@@ -56,11 +56,10 @@ def test_compute_18k_price():
     cost, sale, min_sale = compute_gold_product_price(
         100.0, '18K', 8.0, 5.0
     )
-    # 18K factor 7/8: cost = 100 * 7/8 * 8 = 700, sale = 700 + 40 = 740
-    # min_sale = cost + 70% of markup_total = 700 + 0.7 * 40 = 728
+    # 18K factor 7/8: cost = 700, sale = 740 rounded to 50 = 750, min_sale = 728 rounded to 50 = 750
     assert cost == 700.0
-    assert sale == 740.0
-    assert min_sale == 728.0
+    assert sale == 750.0
+    assert min_sale == 750.0
 
 
 def test_zero_markup():
