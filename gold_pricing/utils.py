@@ -11,12 +11,16 @@ BAR_TIER_WEIGHTS = [1, 2.5, 5, 10, 20, 31, 50, 100, 250, 500, 1000]
 BAR_TIER_PARAM_SUFFIXES = [
     '1g', '2_5g', '5g', '10g', '20g', '31g', '50g', '100g', '250g', '500g', '1000g',
 ]
+# Fallback EGP/gram when config param is missing or zero (same order as tiers above).
+BAR_TIER_DEFAULT_MARKUP = [200.0, 200.0, 125.0,
+                           120.0, 120.0, 115.0, 100.0, 100.0, 80.0, 80.0, 80.0]
 
 
 def _get_markup_bars_by_weight(env, weight_g: float) -> float:
     """
     Resolve bars markup per gram from weight using tier table (closest neighbor).
     Weights >= 1000 use the 1000g tier. Tie-break: use lower weight tier.
+    Uses BAR_TIER_DEFAULT_MARKUP when the config param is missing or zero.
     """
     if weight_g <= 0:
         return 0.0
@@ -24,9 +28,10 @@ def _get_markup_bars_by_weight(env, weight_g: float) -> float:
     if weight_g >= 1000:
         raw = ICP.get_param('gold_pricing.markup_bars_1000g', '0.0')
         try:
-            return float(raw)
+            val = float(raw)
         except (TypeError, ValueError):
-            return 0.0
+            val = 0.0
+        return val if val > 0 else BAR_TIER_DEFAULT_MARKUP[-1]
     # Closest tier by distance; tie -> lower weight
     best_weight = BAR_TIER_WEIGHTS[0]
     best_dist = abs(weight_g - best_weight)
@@ -41,9 +46,10 @@ def _get_markup_bars_by_weight(env, weight_g: float) -> float:
     param_key = f'gold_pricing.markup_bars_{BAR_TIER_PARAM_SUFFIXES[idx]}'
     raw_value = ICP.get_param(param_key, '0.0')
     try:
-        return float(raw_value)
+        val = float(raw_value)
     except (TypeError, ValueError):
-        return 0.0
+        val = 0.0
+    return val if val > 0 else BAR_TIER_DEFAULT_MARKUP[idx]
 
 
 def get_markup_per_gram(env, gold_type: str, weight_g=None) -> float:

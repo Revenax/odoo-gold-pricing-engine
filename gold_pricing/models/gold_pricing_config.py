@@ -49,6 +49,27 @@ class ResConfigSettings(models.TransientModel):
         help='Markup per gram for foreign jewellery',
     )
 
+    # Deprecated: kept so views or cache that still reference them do not raise KeyError.
+    # Bar pricing uses the weight-tier fields below; these are not shown in the config view.
+    markup_bars = fields.Float(
+        string='Markup per Gram - Bars (deprecated)',
+        config_parameter='gold_pricing.markup_bars',
+        digits=(16, 4),
+        default=0.0,
+    )
+    markup_ingots = fields.Float(
+        string='Markup per Gram - Ingots (deprecated)',
+        config_parameter='gold_pricing.markup_ingots',
+        digits=(16, 4),
+        default=0.0,
+    )
+    markup_coins = fields.Float(
+        string='Markup per Gram - Coins (deprecated)',
+        config_parameter='gold_pricing.markup_coins',
+        digits=(16, 4),
+        default=0.0,
+    )
+
     # Bars: weight-tiered markup (EGP per gram). Weights 1, 2.5, 5, 10, 20, 31, 50, 100, 250, 500, 1000g+.
     markup_bars_1g = fields.Float(
         string='Bars 1g (EGP/g)',
