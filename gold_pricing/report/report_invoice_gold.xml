@@ -1,17 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <odoo>
-    <template id="report_invoice_document_gold" inherit_id="account.report_invoice_document">
-
-        <!-- Force standard external layout so header/footer (and custom footer) always render. -->
-        <xpath expr="//t[@t-call='web.external_layout']" position="attributes">
-            <attribute name="t-call">web.external_layout_standard</attribute>
-        </xpath>
-        <!-- Layout expects company; set it before the layout runs (dispatcher normally does this). -->
-        <xpath expr="//t[@t-call='web.external_layout_standard']/t[1]" position="before">
-            <t t-set="company" t-value="o.company_id"/>
-        </xpath>
-
-        <!-- Complete header deletion -->
+    <template id="report_invoice_document_gold" inherit_id="account.report_invoice_document">        
+    <!-- Complete header deletion -->
         <xpath expr="//div[contains(@class, 'row')]" position="replace" />
 
         <!-- Our custom doc title -->
@@ -88,6 +78,7 @@
             </td>
         </xpath>
 
+        
         <!-- Remove Taxes column from header -->
         <xpath expr="//th[@name='th_taxes']" position="replace"/>
 
