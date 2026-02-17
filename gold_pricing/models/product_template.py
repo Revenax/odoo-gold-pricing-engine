@@ -28,8 +28,6 @@ class ProductTemplate(models.Model):
         ('jewellery_local', 'Jewellery - Local'),
         ('jewellery_foreign', 'Jewellery - Foreign'),
         ('bars', 'Bars'),
-        ('ingots', 'Ingots'),
-        ('coins', 'Coins'),
     ]
 
     VALID_GOLD_PURITIES = {item[0] for item in GOLD_PURITY_SELECTION}
@@ -138,8 +136,11 @@ class ProductTemplate(models.Model):
                 record.gold_min_sale_price = 0.0
                 continue
 
-            # Get markup per gram from settings based on gold type
-            markup_per_gram = get_markup_per_gram(self.env, record.gold_type)
+            # Get markup per gram from settings (bars use weight-tier lookup)
+            weight_for_markup = record.gold_weight_g if record.gold_type == 'bars' else None
+            markup_per_gram = get_markup_per_gram(
+                self.env, record.gold_type, weight_g=weight_for_markup
+            )
 
             if markup_per_gram <= 0:
                 # Skip if markup not configured for this type
@@ -179,7 +180,10 @@ class ProductTemplate(models.Model):
         if not self.gold_purity or not self.gold_type:
             return {}
 
-        markup_per_gram = get_markup_per_gram(self.env, self.gold_type)
+        weight_for_markup = self.gold_weight_g if self.gold_type == 'bars' else None
+        markup_per_gram = get_markup_per_gram(
+            self.env, self.gold_type, weight_g=weight_for_markup
+        )
         if markup_per_gram <= 0:
             return {}
 
@@ -347,7 +351,7 @@ class ProductTemplate(models.Model):
                     raise ValidationError(
                         'Gold Type is required for gold products. '
                         'Please select a type (Jewellery - Local, '
-                        'Jewellery - Foreign, Bars, Ingots, or Coins).'
+                        'Jewellery - Foreign, or Bars).'
                     )
                 if record.gold_type not in self.VALID_GOLD_TYPES:
                     raise ValidationError(
@@ -383,8 +387,10 @@ class ProductTemplate(models.Model):
         skipped_count = 0
 
         for product in gold_products:
-            # Get markup per gram from settings based on gold type
-            markup_per_gram = get_markup_per_gram(self.env, product.gold_type)
+            weight_for_markup = product.gold_weight_g if product.gold_type == 'bars' else None
+            markup_per_gram = get_markup_per_gram(
+                self.env, product.gold_type, weight_g=weight_for_markup
+            )
 
             # Skip if markup not configured for this type
             if markup_per_gram <= 0:

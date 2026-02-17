@@ -6,20 +6,68 @@
 import re
 from decimal import ROUND_HALF_UP, Decimal
 
+# Bar markup tiers: (weight_g, config_param_suffix). Weight 1000 means 1000g+.
+BAR_TIER_WEIGHTS = [1, 2.5, 5, 10, 20, 31, 50, 100, 250, 500, 1000]
+BAR_TIER_PARAM_SUFFIXES = [
+    '1g', '2_5g', '5g', '10g', '20g', '31g', '50g', '100g', '250g', '500g', '1000g',
+]
 
-def get_markup_per_gram(env, gold_type: str) -> float:
+
+def _get_markup_bars_by_weight(env, weight_g: float) -> float:
+    """
+    Resolve bars markup per gram from weight using tier table (closest neighbor).
+    Weights >= 1000 use the 1000g tier. Tie-break: use lower weight tier.
+    """
+    if weight_g <= 0:
+        return 0.0
+    ICP = env['ir.config_parameter'].sudo()
+    if weight_g >= 1000:
+        raw = ICP.get_param('gold_pricing.markup_bars_1000g', '0.0')
+        try:
+            return float(raw)
+        except (TypeError, ValueError):
+            return 0.0
+    # Closest tier by distance; tie -> lower weight
+    best_weight = BAR_TIER_WEIGHTS[0]
+    best_dist = abs(weight_g - best_weight)
+    for w in BAR_TIER_WEIGHTS:
+        if w >= 1000:
+            continue
+        d = abs(weight_g - w)
+        if d < best_dist:
+            best_dist = d
+            best_weight = w
+    idx = BAR_TIER_WEIGHTS.index(best_weight)
+    param_key = f'gold_pricing.markup_bars_{BAR_TIER_PARAM_SUFFIXES[idx]}'
+    raw_value = ICP.get_param(param_key, '0.0')
+    try:
+        return float(raw_value)
+    except (TypeError, ValueError):
+        return 0.0
+
+
+def get_markup_per_gram(env, gold_type: str, weight_g=None) -> float:
     """
     Read markup per gram from system parameters.
 
+    For jewellery_local / jewellery_foreign, weight_g is ignored.
+    For bars, weight_g is required; markup is resolved by weight tier (closest neighbor).
+
     Args:
         env: Odoo environment
-        gold_type: Gold type key (e.g. jewellery_local, bars)
+        gold_type: Gold type key (jewellery_local, jewellery_foreign, bars)
+        weight_g: Required when gold_type is 'bars'; used for tier lookup
 
     Returns:
         float: Markup per gram, 0.0 if not configured or invalid
     """
     if not gold_type:
         return 0.0
+
+    if gold_type == 'bars':
+        if weight_g is None or weight_g <= 0:
+            return 0.0
+        return _get_markup_bars_by_weight(env, weight_g)
 
     param_key = f'gold_pricing.markup_{gold_type}'
     raw_value = env['ir.config_parameter'].sudo().get_param(param_key, '0.0')

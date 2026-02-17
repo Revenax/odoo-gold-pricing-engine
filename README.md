@@ -83,12 +83,9 @@ gold_pricing/
      - **Gold 21K Regex Formula**: Regular expression applied to the response to extract the 21K price per gram (use one capturing group for the number)
      - **Fallback Gold Price**: Price per gram when API is unavailable
 
-     **Markup per Gram by Gold Type:**
-     - **Jewellery (Local)**: Markup per gram for local jewellery
-     - **Jewellery (Foreign)**: Markup per gram for foreign jewellery
-     - **Bars**: Markup per gram for gold bars
-     - **Ingots**: Markup per gram for gold ingots
-     - **Coins**: Markup per gram for gold coins
+     **Markup per Gram:**
+     - **Jewellery (Local)** / **Jewellery (Foreign)**: One markup per gram each
+     - **Bars (by weight tier)**: Eleven tiers (1g, 2.5g, 5g, 10g, 20g, 31g, 50g, 100g, 250g, 500g, 1000g+). Weights not in the list use the closest tier; weight >= 1000g uses the 1000g+ tier.
 
    **Alternative**: Use Odoo shell to set parameters:
 
@@ -101,9 +98,18 @@ gold_pricing/
    # Markup Configuration
    self.env['ir.config_parameter'].sudo().set_param('gold_pricing.markup_jewellery_local', '5.0')
    self.env['ir.config_parameter'].sudo().set_param('gold_pricing.markup_jewellery_foreign', '7.0')
-   self.env['ir.config_parameter'].sudo().set_param('gold_pricing.markup_bars', '3.0')
-   self.env['ir.config_parameter'].sudo().set_param('gold_pricing.markup_ingots', '4.0')
-   self.env['ir.config_parameter'].sudo().set_param('gold_pricing.markup_coins', '6.0')
+   # Bars: weight-tiered (EGP per gram). Defaults: 1g/2.5g=200, 5g=125, 10g/20g=120, 31g=115, 50g/100g=100, 250g/500g/1000g+=80
+   self.env['ir.config_parameter'].sudo().set_param('gold_pricing.markup_bars_1g', '200.0')
+   self.env['ir.config_parameter'].sudo().set_param('gold_pricing.markup_bars_2_5g', '200.0')
+   self.env['ir.config_parameter'].sudo().set_param('gold_pricing.markup_bars_5g', '125.0')
+   self.env['ir.config_parameter'].sudo().set_param('gold_pricing.markup_bars_10g', '120.0')
+   self.env['ir.config_parameter'].sudo().set_param('gold_pricing.markup_bars_20g', '120.0')
+   self.env['ir.config_parameter'].sudo().set_param('gold_pricing.markup_bars_31g', '115.0')
+   self.env['ir.config_parameter'].sudo().set_param('gold_pricing.markup_bars_50g', '100.0')
+   self.env['ir.config_parameter'].sudo().set_param('gold_pricing.markup_bars_100g', '100.0')
+   self.env['ir.config_parameter'].sudo().set_param('gold_pricing.markup_bars_250g', '80.0')
+   self.env['ir.config_parameter'].sudo().set_param('gold_pricing.markup_bars_500g', '80.0')
+   self.env['ir.config_parameter'].sudo().set_param('gold_pricing.markup_bars_1000g', '80.0')
    ```
 
 5. **Verify Cron Job**
@@ -129,12 +135,12 @@ gold_pricing/
 
    - **Gold Weight (grams)**: Enter the weight of gold in grams (required)
    - **Gold Purity**: Select purity level (24K, 21K, 18K, 14K, 10K) (required)
-   - **Gold Type**: Select type (Jewellery - Local, Jewellery - Foreign, Bars, Ingots, Coins) (required)
+   - **Gold Type**: Select type (Jewellery - Local, Jewellery - Foreign, or Bars) (required). Bars use weight-tiered markup.
 
 4. **Automatic Calculations**
 
    Once weight, purity, and type are set:
-   - Markup per gram is retrieved from settings based on gold type
+   - Markup per gram is from settings: jewellery types use a single value; Bars use the weight-tier table (closest tier; 1000g+ uses 1000g tier)
    - `gold_cost_price` = (GoldPricePerGram × purity_factor) × weight
    - `markup_total` = markup_per_gram (from settings) × weight
    - `list_price` = cost_price + markup_total
@@ -150,7 +156,7 @@ Gold fields are standard `product.template` fields and are available in Odoo’s
 **Recommended columns for import** (product template):
 - `gold_weight_g`
 - `gold_purity` (use technical values like `24K`, `21K`, `18K`, `14K`, `10K`)
-- `gold_type` (use technical values like `jewellery_local`, `jewellery_foreign`, `bars`, `ingots`, `coins`)
+- `gold_type` (use technical values: `jewellery_local`, `jewellery_foreign`, `bars`)
 - `diamond_usd_price`
 
 **Computed fields** (exportable but should not be imported):
@@ -485,7 +491,7 @@ See [LICENSE](LICENSE) file for full terms and conditions.
 
 ## Version
 
-17.0.1.0.0
+17.0.2.0.0
 
 ## Author
 

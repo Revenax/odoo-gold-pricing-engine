@@ -88,39 +88,111 @@
                                 </div>
                             </div>
                         </div>
-                        <div class="col-12 col-lg-6 o_setting_box">
+                        <div class="col-12 o_setting_box">
                             <div class="o_setting_left_pane"/>
                             <div class="o_setting_right_pane">
-                                <label for="markup_bars"/>
+                                <span class="o_form_label">Bars (by weight tier)</span>
                                 <div class="text-muted">
-                                    Markup per gram for gold bars
-                                </div>
-                                <div class="content-group">
-                                    <field name="markup_bars"/>
+                                    Markup per gram (EGP) for gold bars. Weight 1000g+ applies to 1000g and above. Other weights use the closest tier.
                                 </div>
                             </div>
                         </div>
                         <div class="col-12 col-lg-6 o_setting_box">
                             <div class="o_setting_left_pane"/>
                             <div class="o_setting_right_pane">
-                                <label for="markup_ingots"/>
-                                <div class="text-muted">
-                                    Markup per gram for gold ingots
-                                </div>
+                                <label for="markup_bars_1g"/>
                                 <div class="content-group">
-                                    <field name="markup_ingots"/>
+                                    <field name="markup_bars_1g"/>
                                 </div>
                             </div>
                         </div>
                         <div class="col-12 col-lg-6 o_setting_box">
                             <div class="o_setting_left_pane"/>
                             <div class="o_setting_right_pane">
-                                <label for="markup_coins"/>
-                                <div class="text-muted">
-                                    Markup per gram for gold coins
-                                </div>
+                                <label for="markup_bars_2_5g"/>
                                 <div class="content-group">
-                                    <field name="markup_coins"/>
+                                    <field name="markup_bars_2_5g"/>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-12 col-lg-6 o_setting_box">
+                            <div class="o_setting_left_pane"/>
+                            <div class="o_setting_right_pane">
+                                <label for="markup_bars_5g"/>
+                                <div class="content-group">
+                                    <field name="markup_bars_5g"/>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-12 col-lg-6 o_setting_box">
+                            <div class="o_setting_left_pane"/>
+                            <div class="o_setting_right_pane">
+                                <label for="markup_bars_10g"/>
+                                <div class="content-group">
+                                    <field name="markup_bars_10g"/>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-12 col-lg-6 o_setting_box">
+                            <div class="o_setting_left_pane"/>
+                            <div class="o_setting_right_pane">
+                                <label for="markup_bars_20g"/>
+                                <div class="content-group">
+                                    <field name="markup_bars_20g"/>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-12 col-lg-6 o_setting_box">
+                            <div class="o_setting_left_pane"/>
+                            <div class="o_setting_right_pane">
+                                <label for="markup_bars_31g"/>
+                                <div class="content-group">
+                                    <field name="markup_bars_31g"/>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-12 col-lg-6 o_setting_box">
+                            <div class="o_setting_left_pane"/>
+                            <div class="o_setting_right_pane">
+                                <label for="markup_bars_50g"/>
+                                <div class="content-group">
+                                    <field name="markup_bars_50g"/>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-12 col-lg-6 o_setting_box">
+                            <div class="o_setting_left_pane"/>
+                            <div class="o_setting_right_pane">
+                                <label for="markup_bars_100g"/>
+                                <div class="content-group">
+                                    <field name="markup_bars_100g"/>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-12 col-lg-6 o_setting_box">
+                            <div class="o_setting_left_pane"/>
+                            <div class="o_setting_right_pane">
+                                <label for="markup_bars_250g"/>
+                                <div class="content-group">
+                                    <field name="markup_bars_250g"/>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-12 col-lg-6 o_setting_box">
+                            <div class="o_setting_left_pane"/>
+                            <div class="o_setting_right_pane">
+                                <label for="markup_bars_500g"/>
+                                <div class="content-group">
+                                    <field name="markup_bars_500g"/>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-12 col-lg-6 o_setting_box">
+                            <div class="o_setting_left_pane"/>
+                            <div class="o_setting_right_pane">
+                                <label for="markup_bars_1000g"/>
+                                <div class="content-group">
+                                    <field name="markup_bars_1000g"/>
                                 </div>
                             </div>
                         </div>

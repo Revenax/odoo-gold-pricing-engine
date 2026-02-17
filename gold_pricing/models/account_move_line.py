@@ -17,8 +17,6 @@ GOLD_TYPE_SELECTION = [
     ('jewellery_local', 'Jewellery - Local'),
     ('jewellery_foreign', 'Jewellery - Foreign'),
     ('bars', 'Bars'),
-    ('ingots', 'Ingots'),
-    ('coins', 'Coins'),
 ]
 
 

@@ -49,28 +49,83 @@ class ResConfigSettings(models.TransientModel):
         help='Markup per gram for foreign jewellery',
     )
 
-    markup_bars = fields.Float(
-        string='Markup per Gram - Bars',
-        config_parameter='gold_pricing.markup_bars',
+    # Bars: weight-tiered markup (EGP per gram). Weights 1, 2.5, 5, 10, 20, 31, 50, 100, 250, 500, 1000g+.
+    markup_bars_1g = fields.Float(
+        string='Bars 1g (EGP/g)',
+        config_parameter='gold_pricing.markup_bars_1g',
         digits=(16, 4),
-        default=0.0,
-        help='Markup per gram for gold bars',
+        default=200.0,
+        help='Markup per gram for bars up to 1g',
     )
-
-    markup_ingots = fields.Float(
-        string='Markup per Gram - Ingots',
-        config_parameter='gold_pricing.markup_ingots',
+    markup_bars_2_5g = fields.Float(
+        string='Bars 2.5g (EGP/g)',
+        config_parameter='gold_pricing.markup_bars_2_5g',
         digits=(16, 4),
-        default=0.0,
-        help='Markup per gram for gold ingots',
+        default=200.0,
+        help='Markup per gram for 2.5g tier',
     )
-
-    markup_coins = fields.Float(
-        string='Markup per Gram - Coins',
-        config_parameter='gold_pricing.markup_coins',
+    markup_bars_5g = fields.Float(
+        string='Bars 5g (EGP/g)',
+        config_parameter='gold_pricing.markup_bars_5g',
         digits=(16, 4),
-        default=0.0,
-        help='Markup per gram for gold coins',
+        default=125.0,
+        help='Markup per gram for 5g tier',
+    )
+    markup_bars_10g = fields.Float(
+        string='Bars 10g (EGP/g)',
+        config_parameter='gold_pricing.markup_bars_10g',
+        digits=(16, 4),
+        default=120.0,
+        help='Markup per gram for 10g tier',
+    )
+    markup_bars_20g = fields.Float(
+        string='Bars 20g (EGP/g)',
+        config_parameter='gold_pricing.markup_bars_20g',
+        digits=(16, 4),
+        default=120.0,
+        help='Markup per gram for 20g tier',
+    )
+    markup_bars_31g = fields.Float(
+        string='Bars 31g (EGP/g)',
+        config_parameter='gold_pricing.markup_bars_31g',
+        digits=(16, 4),
+        default=115.0,
+        help='Markup per gram for 31g tier',
+    )
+    markup_bars_50g = fields.Float(
+        string='Bars 50g (EGP/g)',
+        config_parameter='gold_pricing.markup_bars_50g',
+        digits=(16, 4),
+        default=100.0,
+        help='Markup per gram for 50g tier',
+    )
+    markup_bars_100g = fields.Float(
+        string='Bars 100g (EGP/g)',
+        config_parameter='gold_pricing.markup_bars_100g',
+        digits=(16, 4),
+        default=100.0,
+        help='Markup per gram for 100g tier',
+    )
+    markup_bars_250g = fields.Float(
+        string='Bars 250g (EGP/g)',
+        config_parameter='gold_pricing.markup_bars_250g',
+        digits=(16, 4),
+        default=80.0,
+        help='Markup per gram for 250g tier',
+    )
+    markup_bars_500g = fields.Float(
+        string='Bars 500g (EGP/g)',
+        config_parameter='gold_pricing.markup_bars_500g',
+        digits=(16, 4),
+        default=80.0,
+        help='Markup per gram for 500g tier',
+    )
+    markup_bars_1000g = fields.Float(
+        string='Bars 1000g+ (EGP/g)',
+        config_parameter='gold_pricing.markup_bars_1000g',
+        digits=(16, 4),
+        default=80.0,
+        help='Markup per gram for bars 1000g and above',
     )
 
     global_diamond_discount = fields.Integer(
@@ -136,18 +191,21 @@ class ResConfigSettings(models.TransientModel):
                 "default_to_invoice": self.pos_to_invoice_by_default,
             })
 
-    def get_markup_for_type(self, gold_type):
+    def get_markup_for_type(self, gold_type, weight_g=None):
         """
         Get markup per gram for a specific gold type.
 
-        :param gold_type: Gold type string (jewellery_local, jewellery_foreign, bars, ingots, coins)
+        :param gold_type: Gold type (jewellery_local, jewellery_foreign, bars)
+        :param weight_g: Required when gold_type is 'bars'; used for tier lookup
         :return: float - Markup per gram
         """
-        markup_map = {
-            'jewellery_local': self.markup_jewellery_local,
-            'jewellery_foreign': self.markup_jewellery_foreign,
-            'bars': self.markup_bars,
-            'ingots': self.markup_ingots,
-            'coins': self.markup_coins,
-        }
-        return markup_map.get(gold_type, 0.0)
+        if gold_type == 'jewellery_local':
+            return self.markup_jewellery_local
+        if gold_type == 'jewellery_foreign':
+            return self.markup_jewellery_foreign
+        if gold_type == 'bars':
+            if weight_g is None or weight_g <= 0:
+                return 0.0
+            from ..utils import get_markup_per_gram
+            return get_markup_per_gram(self.env, 'bars', weight_g=weight_g)
+        return 0.0

@@ -20,8 +20,6 @@ GOLD_TYPE_SELECTION = [
     ('jewellery_local', 'Jewellery - Local'),
     ('jewellery_foreign', 'Jewellery - Foreign'),
     ('bars', 'Bars'),
-    ('ingots', 'Ingots'),
-    ('coins', 'Coins'),
 ]
 
 
@@ -104,9 +102,13 @@ class PosOrder(models.Model):
                     # Markup total = markup per gram × weight (from settings)
                     has_weight = product.gold_weight_g and product.gold_weight_g > 0
                     if product.gold_type and has_weight:
+                        weight_for_markup = (
+                            product.gold_weight_g if product.gold_type == 'bars' else None
+                        )
                         markup_per_gram = get_markup_per_gram(
                             self.env,
                             product.gold_type,
+                            weight_g=weight_for_markup,
                         )
 
                         if markup_per_gram > 0 and product.list_price > 0:
