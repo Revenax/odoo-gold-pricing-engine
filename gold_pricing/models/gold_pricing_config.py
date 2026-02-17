@@ -29,7 +29,8 @@ class ResConfigSettings(models.TransientModel):
         config_parameter='gold_pricing.fallback_price',
         digits=(16, 2),
         default=75.0,
-        help='Fallback gold price per gram when API is unavailable',
+        help='Fallback gold price per gram when API is unavailable. '
+             'Automatically updated to the last fetched price whenever the API returns successfully.',
     )
 
     markup_jewellery_local = fields.Float(

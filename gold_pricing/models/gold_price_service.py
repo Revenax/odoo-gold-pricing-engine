@@ -89,7 +89,14 @@ class GoldPriceService(models.Model):
             response.raise_for_status()
 
             text = response.text
-            return parse_gold_price_with_regex(text, regex_formula)
+            price = parse_gold_price_with_regex(text, regex_formula)
+            self.env['ir.config_parameter'].sudo().set_param(
+                'gold_pricing.fallback_price',
+                str(price),
+            )
+            _logger.info(
+                'Gold price fetched: %s; fallback price updated', price)
+            return price
 
         except requests.exceptions.Timeout as e:
             _logger.error('API request timed out after %d seconds', timeout)
