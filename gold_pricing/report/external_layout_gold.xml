@@ -3,6 +3,9 @@
      Layout must be enabled: Settings → Companies → Configure Document Layout → choose Standard (or add same footer for Striped/Bold/Boxed). See docs/INVOICE_LAYOUT_SETUP.md. -->
 <odoo>
     <template id="external_layout_gold" inherit_id="web.external_layout">
-        
+        <div style="text-align:center; font-size:10px; margin-top:4mm;">
+            <div>Thank you for your business</div>
+            <div>Marjaan Jewellery — Crafted with precision and trust</div>
+        </div>
     </template>
 </odoo>
