@@ -16,11 +16,13 @@ except ImportError:
     _project_root = os.path.join(os.path.dirname(__file__), '..')
     sys.path.insert(0, os.path.abspath(_project_root))
 
-    _utils_path = os.path.join(os.path.dirname(__file__), "..", "gold_pricing", "utils.py")
+    _utils_path = os.path.join(os.path.dirname(
+        __file__), "..", "gold_pricing", "utils.py")
     _utils_path = os.path.abspath(_utils_path)
 
     if not os.path.exists(_utils_path):
-        raise FileNotFoundError(f"utils.py not found at {_utils_path}") from None
+        raise FileNotFoundError(
+            f"utils.py not found at {_utils_path}") from None
 
     spec = importlib.util.spec_from_file_location("utils", _utils_path)
     utils = importlib.util.module_from_spec(spec)
@@ -35,7 +37,8 @@ def test_compute_21k_price():
     )
     assert cost == 1000.0
     assert sale == 1050.0
-    assert min_sale == 1025.0
+    # min_sale = cost + 70% of markup_total = 1000 + 0.7 * 50 = 1035
+    assert min_sale == 1035.0
 
 
 def test_compute_24k_price():
@@ -54,9 +57,10 @@ def test_compute_18k_price():
         100.0, '18K', 8.0, 5.0
     )
     # 18K factor 7/8: cost = 100 * 7/8 * 8 = 700, sale = 700 + 40 = 740
+    # min_sale = cost + 70% of markup_total = 700 + 0.7 * 40 = 728
     assert cost == 700.0
     assert sale == 740.0
-    assert min_sale == 720.0
+    assert min_sale == 728.0
 
 
 def test_zero_markup():

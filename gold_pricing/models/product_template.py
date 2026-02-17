@@ -77,7 +77,7 @@ class ProductTemplate(models.Model):
         digits=(16, 2),
         compute='_compute_gold_prices',
         store=True,
-        help='Minimum allowed sale price: cost + (markup × 0.5)',
+        help='Minimum allowed sale price: cost + (markup × 0.7)',
     )
 
     is_gold_product = fields.Boolean(
