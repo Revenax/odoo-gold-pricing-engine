@@ -4,7 +4,7 @@
 # Website: https://www.revenax.com
 
 from odoo import _, api, fields, models
-from odoo.exceptions import ValidationError
+from odoo.exceptions import UserError, ValidationError
 
 from ..utils import get_markup_per_gram
 
@@ -148,6 +148,17 @@ class PosOrder(models.Model):
             if hasattr(pos_order_line, fname):
                 result[fname] = pos_order_line[fname]
         return result
+
+    def _process_saved_order(self, draft):
+        """Require invoice for every order when finalizing (not draft)."""
+        if not draft and not self.to_invoice:
+            raise UserError(
+                _(
+                    "An invoice must be set for every order. "
+                    "Please enable invoicing for this order before paying."
+                )
+            )
+        return super()._process_saved_order(draft)
 
 
 class PosOrderLine(models.Model):

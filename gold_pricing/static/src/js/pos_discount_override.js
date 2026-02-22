@@ -145,7 +145,8 @@ patch(Orderline.prototype, {
 
 /**
  * Require customer before payment when pos.config.require_customer === "payment".
- * Compliant with OCA pos_customer_required behaviour.
+ * Require invoice for every order (to_invoice must be set).
+ * Compliant with OCA pos_customer_required behaviour for customer.
  */
 patch(PaymentScreen.prototype, {
   async _isOrderValid(isForceValidate) {
@@ -160,6 +161,15 @@ patch(PaymentScreen.prototype, {
       if (confirmed) {
         this.selectPartner();
       }
+      return false;
+    }
+    if (!this.currentOrder.to_invoice) {
+      await this.popup.add(ConfirmPopup, {
+        title: _t("Invoice required"),
+        body: _t(
+          "An invoice must be set for every order. Please enable invoicing for this order before paying."
+        ),
+      });
       return false;
     }
     return super._isOrderValid(isForceValidate);
