@@ -105,9 +105,9 @@
         <xpath expr="//td[@name='td_quantity']" position="replace">
             <t t-if="report_show_quantity"><td name="td_quantity" class="text-end"><span t-field="line.quantity" t-options="{'widget': 'float', 'precision': 0}"/></td></t>
         </xpath>
-        <!-- Unit price column: show only when quantity column is shown. -->
-        <xpath expr="//th[@name='th_price_unit']" position="replace">
-            <t t-if="report_show_unit_price"><th name="th_price_unit" class="text-end"><span>Unit Price</span></th></t>
+        <!-- Unit price column: show only when quantity column is shown. Base uses th_priceunit (no underscore). -->
+        <xpath expr="//th[@name='th_priceunit']" position="replace">
+            <t t-if="report_show_unit_price"><th name="th_priceunit" class="text-end"><span>Unit Price</span></th></t>
         </xpath>
         <xpath expr="//td[@name='td_price_unit']" position="replace">
             <t t-if="report_show_unit_price"><td name="td_price_unit" class="text-end"><span t-field="line.price_unit" t-options="{'widget': 'monetary', 'display_currency': o.currency_id}"/></td></t>
