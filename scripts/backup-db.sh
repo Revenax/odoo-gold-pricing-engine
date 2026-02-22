@@ -6,7 +6,9 @@
 #   ./scripts/backup-db.sh mydb
 #   ./scripts/backup-db.sh mydb /path/to/backup-$(date +%Y%m%d).sql
 #
-# Optional: set PGHOST, PGPORT, PGUSER, PGPASSWORD (or use .pgpass) for connection.
+# On Ubuntu, if you get "role \"$(whoami)\" does not exist", the script will
+# run pg_dump as system user postgres (via sudo). Otherwise set PGUSER/PGPASSWORD.
+# Optional: PGHOST, PGPORT, PGUSER, PGPASSWORD (or .pgpass) for connection.
 
 set -euo pipefail
 
@@ -22,5 +24,24 @@ if [ -z "$OUTPUT" ]; then
 fi
 
 echo "Backing up database: $DB_NAME -> $OUTPUT"
-pg_dump --no-owner --no-acl "$DB_NAME" -f "$OUTPUT"
+
+_run_dump() {
+  pg_dump --no-owner --no-acl "$DB_NAME" -f "$1"
+}
+
+if [ -n "${PGUSER:-}" ] || [ -n "${PGPASSWORD:-}" ] || [ -n "${PGHOST:-}" ]; then
+  _run_dump "$OUTPUT"
+else
+  TMP_OUT="$(mktemp)"
+  trap 'sudo rm -f "$TMP_OUT"' EXIT
+  if sudo -u postgres pg_dump --no-owner --no-acl "$DB_NAME" -f "$TMP_OUT"; then
+    sudo cp "$TMP_OUT" "$OUTPUT" && sudo chown "$(whoami):$(id -gn)" "$OUTPUT"
+    sudo rm -f "$TMP_OUT"
+    trap - EXIT
+  else
+    echo "Backup failed. On Ubuntu, PostgreSQL often allows only the postgres role. Try: sudo -u postgres $0 $DB_NAME"
+    exit 1
+  fi
+fi
+
 echo "Done. Size: $(du -h "$OUTPUT" | cut -f1)"
