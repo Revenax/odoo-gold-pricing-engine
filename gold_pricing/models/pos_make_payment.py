@@ -15,15 +15,23 @@ class PosMakePayment(models.TransientModel):
         order = self.env["pos.order"].browse(
             self.env.context.get("active_id", False)
         )
+        if not order:
+            return super().check()
         if (
-            order
-            and not order.partner_id
+            not order.partner_id
             and order.session_id.config_id.require_customer != "no"
         ):
             raise UserError(
                 _(
                     "An anonymous order cannot be confirmed.\n"
                     "Please select a customer for this order."
+                )
+            )
+        if not order.to_invoice:
+            raise UserError(
+                _(
+                    "An invoice must be set for every order.\n"
+                    "Please enable invoicing for this order before paying."
                 )
             )
         return super().check()
