@@ -30,7 +30,7 @@ class AccountMoveLine(models.Model):
     )
     gold_weight_g = fields.Float(
         string='Gold Weight (g)',
-        digits=(16, 4),
+        digits=(16, 2),
         help='Gold weight in grams for this line.',
     )
     gold_type = fields.Selection(

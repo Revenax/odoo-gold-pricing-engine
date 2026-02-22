@@ -160,7 +160,7 @@ class PosOrderLine(models.Model):
     )
     gold_weight_g = fields.Float(
         string='Gold Weight (g)',
-        digits=(16, 4),
+        digits=(16, 2),
         help='Gold weight in grams at order time (copied from product).',
     )
     gold_type = fields.Selection(

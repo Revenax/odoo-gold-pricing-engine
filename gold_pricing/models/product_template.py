@@ -39,7 +39,7 @@ class ProductTemplate(models.Model):
     # Gold-specific fields
     gold_weight_g = fields.Float(
         string='Gold Weight (grams)',
-        digits=(16, 4),
+        digits=(16, 2),
         help='Weight of gold in grams. Required for gold products.',
     )
 
