@@ -16,7 +16,7 @@
         <t t-set="report_product_lines" t-value="o.invoice_line_ids.filtered(lambda l: l.display_type not in ('line_section', 'line_note', 'rounding'))"/>
         <t t-set="report_show_purity" t-value="any(l.gold_purity for l in report_product_lines)"/>
         <t t-set="report_show_weight" t-value="any(l.gold_weight_g for l in report_product_lines)"/>
-        <t t-set="report_show_quantity" t-value="bool(report_product_lines)"/>
+        <t t-set="report_show_quantity" t-value="any(l.quantity != 1 for l in report_product_lines)"/>
         <t t-set="report_show_unit_price" t-value="report_show_quantity"/>
     </xpath>
 
