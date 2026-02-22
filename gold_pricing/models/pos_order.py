@@ -155,7 +155,7 @@ class PosOrder(models.Model):
             return
 
         # Aggregate requested quantity per product (positive qty only; refunds excluded)
-        product_qty = {}
+        product_qty: dict[int, float] = {}
         for line_data in lines_data:
             if len(line_data) < 3 or not isinstance(line_data[2], dict):
                 continue
