@@ -2,7 +2,7 @@
 <odoo>
     <template id="report_invoice_document_gold" inherit_id="account.report_invoice_document">
 
-    <!-- Inject custom styles before main content (parent may not have a style node) -->
+    <!-- Inject custom styles and column visibility flags before main content -->
     <xpath expr="//div[contains(@class, 'page') and contains(@class, 'mb-4')]" position="before">
         <style><![CDATA[
             th {
@@ -13,6 +13,11 @@
                 font-size: 14px;
             }
         ]]></style>
+        <t t-set="report_product_lines" t-value="o.invoice_line_ids.filtered(lambda l: l.display_type not in ('line_section', 'line_note', 'rounding'))"/>
+        <t t-set="report_show_purity" t-value="any(l.gold_purity for l in report_product_lines)"/>
+        <t t-set="report_show_weight" t-value="any(l.gold_weight_g for l in report_product_lines)"/>
+        <t t-set="report_show_quantity" t-value="bool(report_product_lines)"/>
+        <t t-set="report_show_unit_price" t-value="report_show_quantity"/>
     </xpath>
 
     <!-- Complete header deletion -->
@@ -60,10 +65,10 @@
             </div>
         </xpath>
 
-        <!-- Gold invoice: Purity and Weight columns, no Taxes column, no payment communication. Layout and paper format use company default. -->
+        <!-- Gold invoice: Purity and Weight columns (only if needed on at least one line). -->
         <xpath expr="//th[@name='th_description']" position="after">
-            <th name="th_purity" class="text-end"><span>Purity</span></th>
-            <th name="th_weight" class="text-end"><span>Weight (g)</span></th>
+            <t t-if="report_show_purity"><th name="th_purity" class="text-end"><span>Purity</span></th></t>
+            <t t-if="report_show_weight"><th name="th_weight" class="text-end"><span>Weight (g)</span></th></t>
         </xpath>
 
         <!-- Our custom payment block -->
@@ -82,22 +87,32 @@
             </div>
         </xpath>
 
-        <!-- Quantity as whole number (no decimals) -->
-        <xpath expr="//span[@t-field='line.quantity']" position="replace">
-            <span t-field="line.quantity" t-options="{'widget': 'float', 'precision': 0}"/>
-        </xpath>
-
-        <!-- Add Purity and Weight cells to each product line (after Description) -->
+        <!-- Add Purity and Weight cells to each product line (only if column is shown). -->
         <xpath expr="//td[@name='account_invoice_line_name']" position="after">
-            <td name="td_purity" class="text-end">
+            <t t-if="report_show_purity"><td name="td_purity" class="text-end">
                 <span t-if="line.gold_purity" t-field="line.gold_purity"/>
-            </td>
-            <td name="td_weight" class="text-end">
+            </td></t>
+            <t t-if="report_show_weight"><td name="td_weight" class="text-end">
                 <span t-if="line.gold_weight_g" t-field="line.gold_weight_g"/>
-            </td>
+            </td></t>
         </xpath>
 
         
+        <!-- Quantity column: show only if at least one product line (header and cell). -->
+        <xpath expr="//th[@name='th_quantity']" position="replace">
+            <t t-if="report_show_quantity"><th name="th_quantity" class="text-end"><span>Quantity</span></th></t>
+        </xpath>
+        <xpath expr="//td[@name='td_quantity']" position="replace">
+            <t t-if="report_show_quantity"><td name="td_quantity" class="text-end"><span t-field="line.quantity" t-options="{'widget': 'float', 'precision': 0}"/></td></t>
+        </xpath>
+        <!-- Unit price column: show only when quantity column is shown. -->
+        <xpath expr="//th[@name='th_price_unit']" position="replace">
+            <t t-if="report_show_unit_price"><th name="th_price_unit" class="text-end"><span>Unit Price</span></th></t>
+        </xpath>
+        <xpath expr="//td[@name='td_price_unit']" position="replace">
+            <t t-if="report_show_unit_price"><td name="td_price_unit" class="text-end"><span t-field="line.price_unit" t-options="{'widget': 'monetary', 'display_currency': o.currency_id}"/></td></t>
+        </xpath>
+
         <!-- Remove Taxes column from header -->
         <xpath expr="//th[@name='th_taxes']" position="replace"/>
 
