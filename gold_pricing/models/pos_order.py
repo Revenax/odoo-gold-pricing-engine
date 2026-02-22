@@ -123,12 +123,84 @@ class PosOrder(models.Model):
                                     f'Current discount: {discount:.2f}%'
                                 )
 
+        # Validate storable product quantities do not exceed available stock
+        self._check_storable_product_stock(ui_order, lines_data)
+
         # Populate gold fields on each order line from product and price service
         for line_cmd in order_fields.get('lines') or []:
             if len(line_cmd) >= 3 and isinstance(line_cmd[2], dict):
                 self._enrich_order_line_vals_with_gold(line_cmd[2])
 
         return order_fields
+
+    @api.model
+    def _check_storable_product_stock(self, ui_order, lines_data):
+        """
+        Raise ValidationError if any storable product line requests more than
+        available stock at the POS location. Consumables and services are ignored.
+        """
+        if not lines_data:
+            return
+        session_id = ui_order.get('pos_session_id')
+        if not session_id:
+            return
+        session = self.env['pos.session'].browse(session_id)
+        if not session.exists():
+            return
+        picking_type = session.config_id.picking_type_id
+        if not picking_type:
+            return
+        location = picking_type.default_location_src_id
+        if not location:
+            return
+
+        # Aggregate requested quantity per product (positive qty only; refunds excluded)
+        product_qty = {}
+        for line_data in lines_data:
+            if len(line_data) < 3 or not isinstance(line_data[2], dict):
+                continue
+            line_vals = line_data[2]
+            product_id = line_vals.get('product_id')
+            qty = line_vals.get('qty', 0)
+            try:
+                qty = float(qty)
+            except (TypeError, ValueError):
+                qty = 0
+            if product_id and qty > 0:
+                product_qty[product_id] = product_qty.get(product_id, 0) + qty
+
+        if not product_qty:
+            return
+
+        products = self.env['product.product'].browse(product_qty.keys())
+        storable = products.filtered(lambda p: p.type == 'product')
+        if not storable:
+            return
+
+        StockQuant = self.env['stock.quant']
+        for product in storable:
+            requested = product_qty.get(product.id, 0)
+            if requested <= 0:
+                continue
+            quants = StockQuant.search([
+                ('product_id', '=', product.id),
+                ('location_id', '=', location.id),
+            ])
+            available = sum(
+                (q.quantity - getattr(q, 'reserved_quantity', 0)) for q in quants
+            )
+            if requested > available:
+                raise ValidationError(
+                    _(
+                        'Not enough stock for "%(name)s". Requested: %(requested)s, '
+                        'available: %(available)s.'
+                    )
+                    % {
+                        'name': product.display_name,
+                        'requested': requested,
+                        'available': available,
+                    }
+                )
 
     @api.model
     def _get_invoice_lines_values(self, line_values, pos_order_line):
