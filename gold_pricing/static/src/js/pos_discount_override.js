@@ -32,22 +32,24 @@ patch(Orderline.prototype, {
     const costPrice = product.gold_cost_price || 0;
     const weight = product.gold_weight_g || 0;
     const minSalePrice = product.gold_min_sale_price || 0;
+    // When no minimum sale price is set, assume 20% max discount
+    const effectiveMin =
+      minSalePrice > 0 ? minSalePrice : currentPrice * 0.8;
 
-    if (costPrice <= 0 || weight <= 0 || minSalePrice <= 0) {
-      return super.set_discount(...arguments);
+    let maxDiscountPercent = 20;
+    if (costPrice > 0 && weight > 0 && listPrice > 0) {
+      const markupTotal = listPrice - costPrice;
+      maxDiscountPercent =
+        ((markupTotal * 0.5) / listPrice) * 100;
     }
-
-    // Calculate markup total from list price and cost price
-    // markup_total = list_price - cost_price
-    const markupTotal = listPrice - costPrice;
-    const maxDiscountPercent =
-      listPrice > 0 ? ((markupTotal * 0.5) / listPrice) * 100 : 0;
     const clampedDiscount = Math.min(discount, maxDiscountPercent);
-    const finalPrice = currentPrice * (1 - clampedDiscount / 100.0);
+    let finalPrice = currentPrice * (1 - clampedDiscount / 100.0);
 
-    if (finalPrice < minSalePrice) {
+    if (finalPrice < effectiveMin) {
       const maxDiscountForMinPrice =
-        ((currentPrice - minSalePrice) / currentPrice) * 100;
+        currentPrice > 0
+          ? ((currentPrice - effectiveMin) / currentPrice) * 100
+          : 0;
       const finalDiscount = Math.max(
         0,
         Math.min(clampedDiscount, maxDiscountForMinPrice)
@@ -60,7 +62,7 @@ patch(Orderline.prototype, {
               product.display_name
             } cannot exceed ${finalDiscount.toFixed(
               2
-            )}% to maintain minimum sale price of ${minSalePrice.toFixed(2)}.`
+            )}% to maintain minimum sale price of ${effectiveMin.toFixed(2)}.`
           ),
           { type: "warning" }
         );
@@ -72,9 +74,7 @@ patch(Orderline.prototype, {
     if (clampedDiscount < discount) {
       this.pos.notification.add(
         _t(
-          `Maximum discount for ${
-            product.display_name
-          } is ${maxDiscountPercent.toFixed(2)}% (50% of markup).`
+          `Maximum discount for ${product.display_name} is ${maxDiscountPercent.toFixed(2)}%.`
         ),
         { type: "warning" }
       );
@@ -89,17 +89,20 @@ patch(Orderline.prototype, {
   set_unit_price(price) {
     if (this.product && this.product.is_gold_product) {
       const minSalePrice = this.product.gold_min_sale_price || 0;
+      const listPrice = this.product.list_price || price;
+      const effectiveMin =
+        minSalePrice > 0 ? minSalePrice : listPrice * 0.8;
 
-      if (minSalePrice > 0 && price < minSalePrice) {
+      if (effectiveMin > 0 && price < effectiveMin) {
         this.pos.notification.add(
           _t(
             `Price for ${
               this.product.display_name
-            } cannot be below minimum sale price of ${minSalePrice.toFixed(2)}.`
+            } cannot be below minimum sale price of ${effectiveMin.toFixed(2)}.`
           ),
           { type: "danger" }
         );
-        price = minSalePrice;
+        price = effectiveMin;
       }
     }
 
@@ -114,20 +117,24 @@ patch(Orderline.prototype, {
 
     if (this.product && this.product.is_gold_product) {
       const minSalePrice = this.product.gold_min_sale_price || 0;
+      const unitPrice = this.get_unit_price();
+      const effectiveMin =
+        minSalePrice > 0 ? minSalePrice : unitPrice * 0.8;
       const finalPrice = result.price || 0;
 
-      if (minSalePrice > 0 && finalPrice < minSalePrice) {
-        const unitPrice = this.get_unit_price();
+      if (effectiveMin > 0 && finalPrice < effectiveMin) {
         const discountAdjustment =
-          unitPrice > 0 ? ((minSalePrice - finalPrice) / unitPrice) * 100 : 0;
+          unitPrice > 0
+            ? ((effectiveMin - finalPrice) / unitPrice) * 100
+            : 0;
 
         if (this.discount < discountAdjustment) {
           this.set_discount(0);
-          this.set_unit_price(minSalePrice);
+          this.set_unit_price(effectiveMin);
 
           this.pos.notification.add(
             _t(
-              `Price adjusted to minimum sale price of ${minSalePrice.toFixed(
+              `Price adjusted to minimum sale price of ${effectiveMin.toFixed(
                 2
               )} for ${this.product.display_name}.`
             ),
@@ -208,14 +215,18 @@ patch(ProductScreen.prototype, {
       const currentPrice = selectedLine.get_unit_price();
       const listPrice = product.list_price || currentPrice;
       const costPrice = product.gold_cost_price || 0;
+      const effectiveMin =
+        minSalePrice > 0 ? minSalePrice : currentPrice * 0.8;
 
-      if (minSalePrice > 0 && costPrice > 0) {
-        // Calculate markup total from list price and cost price
-        const markupTotal = listPrice - costPrice;
-        const maxDiscountPercent =
-          listPrice > 0 ? ((markupTotal * 0.5) / listPrice) * 100 : 0;
+      if (effectiveMin > 0 && currentPrice > 0) {
+        let maxDiscountPercent = 20;
+        if (costPrice > 0 && listPrice > 0) {
+          const markupTotal = listPrice - costPrice;
+          maxDiscountPercent =
+            ((markupTotal * 0.5) / listPrice) * 100;
+        }
         const maxDiscountForMinPrice =
-          ((currentPrice - minSalePrice) / currentPrice) * 100;
+          ((currentPrice - effectiveMin) / currentPrice) * 100;
         const actualMaxDiscount = Math.min(
           maxDiscountPercent,
           maxDiscountForMinPrice

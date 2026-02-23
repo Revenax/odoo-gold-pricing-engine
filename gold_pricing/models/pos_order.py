@@ -88,14 +88,21 @@ class PosOrder(models.Model):
                 if not product.exists():
                     continue
                 if getattr(product, 'is_gold_product', False):
-                    # Enforce minimum sale price
-                    if product.gold_min_sale_price:
+                    # Enforce minimum sale price; if none set, assume 20% max discount
+                    effective_min = product.gold_min_sale_price or (price_unit * 0.8)
+                    if effective_min > 0:
                         final_price = price_unit * (1 - discount / 100.0)
-                        if final_price < product.gold_min_sale_price:
+                        if final_price < effective_min:
                             raise ValidationError(
-                                f'Cannot sell {product.name} below minimum price of '
-                                f'{product.gold_min_sale_price:.2f}. '
-                                f'Current price: {final_price:.2f}'
+                                _(
+                                    'Cannot sell %(name)s below minimum price of %(min).2f. '
+                                    'Current price: %(price).2f'
+                                )
+                                % {
+                                    'name': product.name,
+                                    'min': effective_min,
+                                    'price': final_price,
+                                }
                             )
 
                     # Check if discount exceeds 50% of markup
@@ -267,14 +274,26 @@ class PosOrderLine(models.Model):
     def _check_gold_minimum_price(self):
         """
         Constraint to ensure gold products are not sold below minimum price.
+        When no minimum sale price is set, assume 20% max discount (min = price_unit * 0.8).
         """
         for line in self:
-            if line.product_id.is_gold_product and line.product_id.gold_min_sale_price:
-                final_price = line.price_unit * (1 - line.discount / 100.0)
-
-                if final_price < line.product_id.gold_min_sale_price:
-                    raise ValidationError(
-                        f'Cannot sell {line.product_id.name} below minimum price of '
-                        f'{line.product_id.gold_min_sale_price:.2f}. '
-                        f'Current price: {final_price:.2f}'
+            if not line.product_id.is_gold_product:
+                continue
+            effective_min = (
+                line.product_id.gold_min_sale_price or (line.price_unit * 0.8)
+            )
+            if effective_min <= 0:
+                continue
+            final_price = line.price_unit * (1 - line.discount / 100.0)
+            if final_price < effective_min:
+                raise ValidationError(
+                    _(
+                        'Cannot sell %(name)s below minimum price of %(min).2f. '
+                        'Current price: %(price).2f'
                     )
+                    % {
+                        'name': line.product_id.name,
+                        'min': effective_min,
+                        'price': final_price,
+                    }
+                )
