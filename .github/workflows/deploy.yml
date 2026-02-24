@@ -43,6 +43,7 @@ jobs:
           for var in EC2_HOST EC2_USER EC2_SSH_KEY; do
             [ -n "${!var}" ] || { echo "Error: $var secret not set"; exit 1; }
           done
+          mkdir -p ~/.ssh
           key="$HOME/.ssh/deploy_key"
           printf '%s' "$EC2_SSH_KEY" > "$key"
           chmod 600 "$key"
