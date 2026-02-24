@@ -45,9 +45,9 @@ jobs:
           done
           mkdir -p ~/.ssh
           key="$HOME/.ssh/deploy_key"
-          printf '%s' "$EC2_SSH_KEY" > "$key"
+          echo "$EC2_SSH_KEY" > "$key"
           chmod 600 "$key"
           ssh-keyscan -H "$EC2_HOST" >> ~/.ssh/known_hosts 2>/dev/null || true
-          ssh -i "$key" -o StrictHostKeyChecking=no "${EC2_USER}@${EC2_HOST}" \
+          ssh -i "$key" -o StrictHostKeyChecking=no -o UserKnownHostsFile=~/.ssh/known_hosts "${EC2_USER}@${EC2_HOST}" \
             "GIT_REPO_PATH='$EC2_GIT_REPO_PATH' bash -s" < scripts/remote-deploy.sh
           rm -f "$key"
