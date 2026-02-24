@@ -26,6 +26,7 @@ select = [
 ignore = [
     "E501",  # line too long (handled by formatter)
     "N806",  # variable in function should be lowercase (Odoo uses camelCase)
+    "N999",  # invalid-module-name: addon dir may be hyphenated (e.g. odoo-jewellery-evaluator) in CI/deploy
     "UP009",  # UTF-8 encoding declaration is standard for Odoo modules
     "B018",   # __manifest__.py dict is not useless expression
     "F401",   # imports in __init__.py are needed for Odoo module loading
