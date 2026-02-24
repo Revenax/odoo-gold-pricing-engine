@@ -1,7 +1,7 @@
 #!/bin/bash
 # Runs on the EC2 host via SSH from CI.
-# Expects GIT_REPO_PATH (where to git pull) and DEPLOY_TARGET (where Odoo expects the module).
-# Usage: ssh user@host "GIT_REPO_PATH=/path/to/repo DEPLOY_TARGET=/path/to/gold_pricing bash -s" < scripts/remote-deploy.sh
+# Expects GIT_REPO_PATH (where the repo/module lives on the server).
+# Usage: ssh user@host "GIT_REPO_PATH=/opt/odoo/addons/gold_pricing bash -s" < scripts/remote-deploy.sh
 # If Odoo binary is not auto-detected from systemd, set it here:
 # ODOO_BIN="/path/to/odoo-bin"
 
@@ -11,10 +11,10 @@ if [ -z "${GIT_REPO_PATH:-}" ]; then
   echo "Error: GIT_REPO_PATH not set"
   exit 1
 fi
-if [ -z "${DEPLOY_TARGET:-}" ]; then
-  echo "Error: DEPLOY_TARGET not set"
-  exit 1
-fi
+
+# By default, module name is the directory name at GIT_REPO_PATH (e.g. /opt/odoo/addons/gold_pricing -> gold_pricing).
+# Override with MODULE_NAME if you need something else.
+MODULE_NAME="${MODULE_NAME:-$(basename "$GIT_REPO_PATH")}"
 
 cd "$GIT_REPO_PATH" || { echo "Error: cannot cd to GIT_REPO_PATH=$GIT_REPO_PATH"; exit 1; }
 
@@ -37,12 +37,6 @@ python3 -m py_compile gold_pricing/utils.py || {
   exit 1
 }
 
-# Copy module to where Odoo expects it when repo path != deploy target (e.g. repo is odoo-gold-pricing-engine, module is gold_pricing)
-if [ "$GIT_REPO_PATH" != "$DEPLOY_TARGET" ]; then
-  rm -rf "$DEPLOY_TARGET"
-  cp -a "$GIT_REPO_PATH/gold_pricing" "$(dirname "$DEPLOY_TARGET")/"
-fi
-
 # Graceful stop: systemctl stop sends SIGTERM so Odoo can finish in-flight requests and
 # release DB connections. We then wait for the service to be fully inactive before upgrading.
 # Otherwise the running server holds locks and upgrade "sometimes" fails with "lock timeout".
@@ -61,7 +55,7 @@ while systemctl is-active -q odoo 2>/dev/null; do
 done
 echo "Odoo stopped."
 
-echo "Upgrading module: gold_pricing"
+echo "Upgrading module: $MODULE_NAME"
 # Run upgrade the same way systemd does: venv python + odoo-bin (so psycopg2 etc. are available)
 ODOO_PYTHON="${ODOO_PYTHON:-}"
 ODOO_BIN="${ODOO_BIN:-}"
@@ -84,9 +78,9 @@ trap 'rm -f "$UPGRADE_OUTPUT"; sudo systemctl start odoo || true' EXIT
 
 set +e
 if [ -n "$ODOO_PYTHON" ] && [ -x "$ODOO_PYTHON" ]; then
-  sudo -u odoo "$ODOO_PYTHON" "$ODOO_BIN" -u gold_pricing --stop-after-init -c "$ODOO_CONFIG" >"$UPGRADE_OUTPUT" 2>&1
+  sudo -u odoo "$ODOO_PYTHON" "$ODOO_BIN" -u "$MODULE_NAME" --stop-after-init -c "$ODOO_CONFIG" >"$UPGRADE_OUTPUT" 2>&1
 else
-  sudo -u odoo "$ODOO_BIN" -u gold_pricing --stop-after-init -c "$ODOO_CONFIG" >"$UPGRADE_OUTPUT" 2>&1
+  sudo -u odoo "$ODOO_BIN" -u "$MODULE_NAME" --stop-after-init -c "$ODOO_CONFIG" >"$UPGRADE_OUTPUT" 2>&1
 fi
 UPGRADE_EXIT=$?
 set -e

@@ -1,7 +1,7 @@
 #!/bin/bash
-# Deployment script for EC2 instance
-# This script is meant to be run on the EC2 server, not locally
-# It performs atomic git pull and basic validation
+# Deployment script for EC2 instance (run on the server).
+# Performs atomic git pull and syntax validation only.
+# For full deploy (build flat module at addons path and run Odoo upgrade), use scripts/remote-deploy.sh via scripts/deploy-local.sh.
 
 set -euo pipefail
 
