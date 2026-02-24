@@ -13,7 +13,20 @@ import sys
 
 # Add project root to path
 _project_root = os.path.join(os.path.dirname(__file__), '..')
-sys.path.insert(0, os.path.abspath(_project_root))
+_project_root = os.path.abspath(_project_root)
+sys.path.insert(0, _project_root)
+
+
+def pytest_ignore_collect(collection_path, config):
+    """Do not collect the repo root __init__.py (invalid as package when dir has hyphens)."""
+    try:
+        root = config.rootpath.resolve()
+        path = collection_path.resolve()
+        if path.name == "__init__.py" and path.parent == root:
+            return True
+    except Exception:
+        pass
+    return False
 
 # Load utils module directly
 _utils_path = os.path.join(os.path.dirname(__file__), "..", "jewellery_evaluator", "utils.py")
