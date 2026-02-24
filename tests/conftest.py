@@ -16,13 +16,13 @@ _project_root = os.path.join(os.path.dirname(__file__), '..')
 sys.path.insert(0, os.path.abspath(_project_root))
 
 # Load utils module directly
-_utils_path = os.path.join(os.path.dirname(__file__), "..", "gold_pricing", "utils.py")
+_utils_path = os.path.join(os.path.dirname(__file__), "..", "jewellery_evaluator", "utils.py")
 _utils_path = os.path.abspath(_utils_path)
 
 if os.path.exists(_utils_path):
-    spec = importlib.util.spec_from_file_location("gold_pricing_utils", _utils_path)
+    spec = importlib.util.spec_from_file_location("jewellery_evaluator_utils", _utils_path)
     utils_module = importlib.util.module_from_spec(spec)
     spec.loader.exec_module(utils_module)
 
     # Make utils available to all tests
-    sys.modules['gold_pricing_utils'] = utils_module
+    sys.modules['jewellery_evaluator_utils'] = utils_module

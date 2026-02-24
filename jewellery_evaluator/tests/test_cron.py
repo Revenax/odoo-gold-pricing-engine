@@ -14,7 +14,7 @@ class TestGoldPricingCron(common.TransactionCase):
     def test_cron_gold_prices_record_exists_and_active(self):
         """Scheduled action for gold price updates is installed and active."""
         cron = self.env.ref(
-            "gold_pricing.ir_cron_update_gold_prices",
+            "jewellery_evaluator.ir_cron_update_gold_prices",
             raise_if_not_found=False,
         )
         self.assertTrue(cron, "Gold price cron record should exist")
@@ -30,7 +30,7 @@ class TestGoldPricingCron(common.TransactionCase):
     def test_cron_diamond_prices_record_exists_and_active(self):
         """Scheduled action for diamond price updates is installed and active."""
         cron = self.env.ref(
-            "gold_pricing.ir_cron_update_diamond_prices",
+            "jewellery_evaluator.ir_cron_update_diamond_prices",
             raise_if_not_found=False,
         )
         self.assertTrue(cron, "Diamond price cron record should exist")

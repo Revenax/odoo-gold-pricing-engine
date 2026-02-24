@@ -1,10 +1,10 @@
 {
-    'name': 'Gold Pricing Engine',
+    'name': 'Jewellery Evaluator',
     'version': '17.0.2.0.0',
     'category': 'Sales/Point of Sale',
     'summary': 'Automated gold pricing with live API updates and POS price enforcement',
     'description': """
-        Gold Pricing Engine for Jewelry Business
+        Jewellery Evaluator for Jewelry Business
         =========================================
         Version: 17.0.1.0.0
 
@@ -31,21 +31,21 @@
         'stock',
     ],
     'data': [
-        'gold_pricing/security/ir.model.access.csv',
-        'gold_pricing/security/gold_pricing_security.xml',
-        'gold_pricing/views/gold_pricing_config_views.xml',
-        'gold_pricing/views/pos_config_views.xml',
-        'gold_pricing/views/pos_order_views.xml',
-        'gold_pricing/views/product_template_views.xml',
-        'gold_pricing/views/account_move_views.xml',
-        'gold_pricing/report/paperformat_gold.xml',
-        'gold_pricing/report/report_invoice_gold.xml',
-        'gold_pricing/report/external_layout_gold.xml',
-        'gold_pricing/data/gold_pricing_cron.xml',
+        'jewellery_evaluator/security/ir.model.access.csv',
+        'jewellery_evaluator/security/jewellery_evaluator_security.xml',
+        'jewellery_evaluator/views/jewellery_evaluator_config_views.xml',
+        'jewellery_evaluator/views/pos_config_views.xml',
+        'jewellery_evaluator/views/pos_order_views.xml',
+        'jewellery_evaluator/views/product_template_views.xml',
+        'jewellery_evaluator/views/account_move_views.xml',
+        'jewellery_evaluator/report/paperformat_gold.xml',
+        'jewellery_evaluator/report/report_invoice_gold.xml',
+        'jewellery_evaluator/report/external_layout_gold.xml',
+        'jewellery_evaluator/data/jewellery_evaluator_cron.xml',
     ],
     'assets': {
         'point_of_sale.assets': [
-            'gold_pricing/static/src/js/pos_discount_override.js',
+            'jewellery_evaluator/static/src/js/pos_discount_override.js',
         ],
     },
     'installable': True,

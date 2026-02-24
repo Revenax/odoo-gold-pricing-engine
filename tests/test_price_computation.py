@@ -8,7 +8,7 @@ import sys
 
 # Import utils from conftest-loaded module or load directly
 try:
-    from gold_pricing_utils import compute_gold_product_price  # noqa: F401
+    from jewellery_evaluator_utils import compute_gold_product_price  # noqa: F401
 except ImportError:
     # Fallback: load directly
     import importlib.util
@@ -17,7 +17,7 @@ except ImportError:
     sys.path.insert(0, os.path.abspath(_project_root))
 
     _utils_path = os.path.join(os.path.dirname(
-        __file__), "..", "gold_pricing", "utils.py")
+        __file__), "..", "jewellery_evaluator", "utils.py")
     _utils_path = os.path.abspath(_utils_path)
 
     if not os.path.exists(_utils_path):

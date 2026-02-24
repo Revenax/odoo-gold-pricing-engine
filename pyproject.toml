@@ -3,9 +3,9 @@ requires = ["setuptools>=61.0"]
 build-backend = "setuptools.build_meta"
 
 [project]
-name = "gold-pricing-engine"
+name = "jewellery-evaluator"
 version = "17.0.1.0.0"
-description = "Odoo 17 module for automated gold pricing with live API updates"
+description = "Odoo 17 module for jewellery evaluation with live API updates and POS price enforcement"
 requires-python = ">=3.10"
 
 [tool.ruff]

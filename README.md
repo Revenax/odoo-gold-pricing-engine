@@ -1,4 +1,4 @@
-# Gold Pricing Engine - Odoo 17 Module
+# Jewellery Evaluator - Odoo 17 Module
 
 Production-grade custom Odoo 17 Community module for jewelry and gold businesses with automated pricing, POS enforcement, and live API integration.
 
@@ -15,24 +15,24 @@ This module provides comprehensive gold product pricing management for jewelry b
 ## Module Structure
 
 ```
-gold_pricing/
+jewellery_evaluator/
 ├── __init__.py
 ├── __manifest__.py
-├── utils.py                      # Pure helper functions (price parsing, computation)
+├── utils.py                              # Pure helper functions (price parsing, computation)
 ├── models/
 │   ├── __init__.py
-│   ├── product_template.py      # Product model extensions
-│   ├── gold_price_service.py    # API service and cron logic
-│   ├── gold_pricing_config.py  # Configuration settings
-│   └── pos_order.py             # POS backend validation
+│   ├── product_template.py              # Product model extensions
+│   ├── gold_price_service.py            # API service and cron logic
+│   ├── jewellery_evaluator_config.py    # Configuration settings
+│   └── pos_order.py                     # POS backend validation
 ├── views/
-│   ├── gold_pricing_config_views.xml
+│   ├── jewellery_evaluator_config_views.xml
 │   └── product_template_views.xml
 ├── security/
 │   ├── ir.model.access.csv
-│   └── gold_pricing_security.xml
+│   └── jewellery_evaluator_security.xml
 ├── data/
-│   └── gold_pricing_cron.xml     # Cron job definition
+│   └── jewellery_evaluator_cron.xml     # Cron job definition
 └── static/
     └── src/
         └── js/
@@ -55,8 +55,8 @@ gold_pricing/
    # Navigate to your Odoo addons directory
    cd /path/to/odoo/addons
    
-   # Copy the gold_pricing module
-   cp -r /path/to/gold_pricing gold_pricing
+   # Copy the jewellery_evaluator module
+   cp -r /path/to/jewellery_evaluator jewellery_evaluator
    ```
 
 2. **Update Module List**
@@ -68,14 +68,14 @@ gold_pricing/
 
 3. **Install Module**
 
-   - Search for "Gold Pricing Engine"
+   - Search for "Jewellery Evaluator"
    - Click **Install**
 
-4. **Configure Gold Pricing Settings** (Required)
+4. **Configure Jewellery Evaluator Settings** (Required)
 
    After installation, configure the module settings:
 
-   - Go to **Settings** → **Gold Pricing** (or search for "Gold Pricing" in Settings)
+   - Go to **Settings** → **Jewellery Evaluator** (or search for "Jewellery Evaluator" in Settings)
    - Configure the following:
 
      **API Configuration:**
@@ -91,25 +91,25 @@ gold_pricing/
 
    ```python
    # API Configuration
-   self.env['ir.config_parameter'].sudo().set_param('gold_pricing.gold_api_endpoint', 'https://your-api.com/gold/price')
-   self.env['ir.config_parameter'].sudo().set_param('gold_pricing.gold_21k_regex_formula', r'(\\d+(?:\\.\\d+)?)')  # example: one capturing group for the price number
-   self.env['ir.config_parameter'].sudo().set_param('gold_pricing.fallback_price', '75.0')
+   self.env['ir.config_parameter'].sudo().set_param('jewellery_evaluator.gold_api_endpoint', 'https://your-api.com/gold/price')
+   self.env['ir.config_parameter'].sudo().set_param('jewellery_evaluator.gold_21k_regex_formula', r'(\\d+(?:\\.\\d+)?)')  # example: one capturing group for the price number
+   self.env['ir.config_parameter'].sudo().set_param('jewellery_evaluator.fallback_price', '75.0')
    
    # Markup Configuration
-   self.env['ir.config_parameter'].sudo().set_param('gold_pricing.markup_jewellery_local', '5.0')
-   self.env['ir.config_parameter'].sudo().set_param('gold_pricing.markup_jewellery_foreign', '7.0')
+   self.env['ir.config_parameter'].sudo().set_param('jewellery_evaluator.markup_jewellery_local', '5.0')
+   self.env['ir.config_parameter'].sudo().set_param('jewellery_evaluator.markup_jewellery_foreign', '7.0')
    # Bars: weight-tiered (EGP per gram). Defaults: 1g/2.5g=200, 5g=125, 10g/20g=120, 31g=115, 50g/100g=100, 250g/500g/1000g+=80
-   self.env['ir.config_parameter'].sudo().set_param('gold_pricing.markup_bars_1g', '200.0')
-   self.env['ir.config_parameter'].sudo().set_param('gold_pricing.markup_bars_2_5g', '200.0')
-   self.env['ir.config_parameter'].sudo().set_param('gold_pricing.markup_bars_5g', '125.0')
-   self.env['ir.config_parameter'].sudo().set_param('gold_pricing.markup_bars_10g', '120.0')
-   self.env['ir.config_parameter'].sudo().set_param('gold_pricing.markup_bars_20g', '120.0')
-   self.env['ir.config_parameter'].sudo().set_param('gold_pricing.markup_bars_31g', '115.0')
-   self.env['ir.config_parameter'].sudo().set_param('gold_pricing.markup_bars_50g', '100.0')
-   self.env['ir.config_parameter'].sudo().set_param('gold_pricing.markup_bars_100g', '100.0')
-   self.env['ir.config_parameter'].sudo().set_param('gold_pricing.markup_bars_250g', '80.0')
-   self.env['ir.config_parameter'].sudo().set_param('gold_pricing.markup_bars_500g', '80.0')
-   self.env['ir.config_parameter'].sudo().set_param('gold_pricing.markup_bars_1000g', '80.0')
+   self.env['ir.config_parameter'].sudo().set_param('jewellery_evaluator.markup_bars_1g', '200.0')
+   self.env['ir.config_parameter'].sudo().set_param('jewellery_evaluator.markup_bars_2_5g', '200.0')
+   self.env['ir.config_parameter'].sudo().set_param('jewellery_evaluator.markup_bars_5g', '125.0')
+   self.env['ir.config_parameter'].sudo().set_param('jewellery_evaluator.markup_bars_10g', '120.0')
+   self.env['ir.config_parameter'].sudo().set_param('jewellery_evaluator.markup_bars_20g', '120.0')
+   self.env['ir.config_parameter'].sudo().set_param('jewellery_evaluator.markup_bars_31g', '115.0')
+   self.env['ir.config_parameter'].sudo().set_param('jewellery_evaluator.markup_bars_50g', '100.0')
+   self.env['ir.config_parameter'].sudo().set_param('jewellery_evaluator.markup_bars_100g', '100.0')
+   self.env['ir.config_parameter'].sudo().set_param('jewellery_evaluator.markup_bars_250g', '80.0')
+   self.env['ir.config_parameter'].sudo().set_param('jewellery_evaluator.markup_bars_500g', '80.0')
+   self.env['ir.config_parameter'].sudo().set_param('jewellery_evaluator.markup_bars_1000g', '80.0')
    ```
 
 5. **Verify Cron Job**
@@ -225,7 +225,7 @@ No authentication (e.g. cookie) is sent; use a public or pre-authenticated URL i
 
 ### Error Handling
 
-- If API is unavailable, module uses `gold_pricing.fallback_price`
+- If API is unavailable, module uses `jewellery_evaluator.fallback_price`
 - All errors are logged to Odoo logs
 - Cron job continues even if individual updates fail
 
@@ -246,8 +246,8 @@ The module uses the following purity factors:
 
 ### Access Control
 
-- **Gold Pricing User**: Can view gold pricing information
-- **Gold Pricing Manager**: Can configure pricing settings
+- **Jewellery Evaluator User**: Can view jewellery evaluation information
+- **Jewellery Evaluator Manager**: Can configure pricing settings
 - **System Administrators**: Can view cost prices (hidden from other users)
 
 ### Field Visibility
@@ -272,7 +272,7 @@ The module uses the following purity factors:
    - Verify "Update Gold Product Prices" is active
 
 2. **Check API Configuration**
-   - Verify `gold_pricing.gold_api_endpoint` and `gold_pricing.gold_21k_regex_formula` in System Parameters
+   - Verify `jewellery_evaluator.gold_api_endpoint` and `jewellery_evaluator.gold_21k_regex_formula` in System Parameters
    - Test API endpoint manually (GET; expect 200 and HTML/text)
 
 3. **Check Logs**
@@ -298,7 +298,7 @@ The module uses the following purity factors:
    ```
 
 2. **Check Fallback Price**
-   - Verify `gold_pricing.fallback_price` is set (optional, default: 75.0)
+   - Verify `jewellery_evaluator.fallback_price` is set (optional, default: 75.0)
    - Module will use this if API fails
 
 3. **Review Network Settings**
@@ -343,7 +343,7 @@ Before deploying to production, run the automated checks to ensure code quality:
 2. Run `make check` to verify everything passes
 3. Commit and push to `main` branch
 4. SSH into EC2 instance
-5. Navigate to module directory: `cd /path/to/odoo/addons/gold_pricing`
+5. Navigate to module directory: `cd /path/to/odoo/addons/jewellery_evaluator`
 6. Pull latest changes: `git pull origin main`
 7. Restart Odoo service (method depends on your setup)
 
@@ -359,8 +359,8 @@ The repository includes a GitHub Actions workflow (`.github/workflows/deploy.yml
    - `EC2_HOST`: Your EC2 instance hostname or IP (e.g., `ec2-xxx.compute.amazonaws.com`)
    - `EC2_USER`: SSH username (e.g., `ec2-user`, `ubuntu`, `admin`)
    - `EC2_SSH_KEY`: Private SSH key content for EC2 access
-   - `EC2_GIT_REPO_PATH`: Path to the repo on the server (where we pull and run the module), e.g. `/opt/odoo/custom-addons/gold_pricing`
-   **Deploy user sudo (required for auto upgrade + restart):** The remote script runs `sudo -u odoo odoo -u gold_pricing --stop-after-init -c /etc/odoo.conf` then `sudo systemctl restart odoo`. On the EC2 instance, allow the deploy user to run these without a password:
+   - `EC2_GIT_REPO_PATH`: Path to the repo on the server (where we pull and run the module), e.g. `/opt/odoo/custom-addons/jewellery_evaluator`
+   **Deploy user sudo (required for auto upgrade + restart):** The remote script runs `sudo -u odoo odoo -u jewellery_evaluator --stop-after-init -c /etc/odoo.conf` then `sudo systemctl restart odoo`. On the EC2 instance, allow the deploy user to run these without a password:
    ```bash
    sudo visudo
    ```
@@ -376,7 +376,7 @@ The repository includes a GitHub Actions workflow (`.github/workflows/deploy.yml
    - **Option A (recommended):** On the EC2 instance, make the deploy user owner of the repo directory:
      ```bash
      sudo chmod o+x /opt /opt/odoo /opt/odoo/custom-addons
-     sudo chown -R ubuntu:ubuntu /opt/odoo/custom-addons/gold_pricing
+     sudo chown -R ubuntu:ubuntu /opt/odoo/custom-addons/jewellery_evaluator
      ```
    - **Option B (use sudo):** Run the remote deploy script with sudo so it can cd into a root-owned path (e.g. pass the script to `sudo bash -s`). Ensure the Odoo process user can read the files after update.
 
@@ -394,8 +394,8 @@ The repository includes a GitHub Actions workflow (`.github/workflows/deploy.yml
 
 #### Module install and upgrade
 
-- **First install:** The module has `auto_install: False`. Install it once from Odoo **Apps** (Update Apps List, then install "Gold Pricing Engine"). Deploy only copies files; it does not install the module.
-- **After deploy:** The script runs a module upgrade (`odoo -u gold_pricing --stop-after-init`) then restarts Odoo (`systemctl restart odoo`) so code and manifest/data changes are applied.
+- **First install:** The module has `auto_install: False`. Install it once from Odoo **Apps** (Update Apps List, then install "Jewellery Evaluator"). Deploy only copies files; it does not install the module.
+- **After deploy:** The script runs a module upgrade (`odoo -u jewellery_evaluator --stop-after-init`) then restarts Odoo (`systemctl restart odoo`) so code and manifest/data changes are applied.
 
 #### Deployment Process
 

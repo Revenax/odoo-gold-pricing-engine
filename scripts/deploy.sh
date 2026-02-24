@@ -42,7 +42,7 @@ fi
 
 # Quick syntax validation
 echo "Validating Python syntax..."
-if ! python3 -m py_compile gold_pricing/utils.py; then
+if ! python3 -m py_compile jewellery_evaluator/utils.py; then
     echo "Error: Syntax validation failed. Deployment aborted."
     exit 1
 fi

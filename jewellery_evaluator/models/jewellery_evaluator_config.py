@@ -12,13 +12,13 @@ class ResConfigSettings(models.TransientModel):
 
     gold_api_endpoint = fields.Char(
         string='Gold API Endpoint',
-        config_parameter='gold_pricing.gold_api_endpoint',
+        config_parameter='jewellery_evaluator.gold_api_endpoint',
         help='URL endpoint for fetching gold prices from the API',
     )
 
     gold_21k_regex_formula = fields.Char(
         string='Gold 21K Regex Formula',
-        config_parameter='gold_pricing.gold_21k_regex_formula',
+        config_parameter='jewellery_evaluator.gold_21k_regex_formula',
         help='Regular expression applied to the API HTML response to extract the 21K gold '
              'price per gram. Use one capturing group for the price number (e.g. (\\d+(?:\\.\\d+)?)). '
              'If no group, the full match is used.',
@@ -26,7 +26,7 @@ class ResConfigSettings(models.TransientModel):
 
     fallback_price = fields.Float(
         string='Fallback Gold Price',
-        config_parameter='gold_pricing.fallback_price',
+        config_parameter='jewellery_evaluator.fallback_price',
         digits=(16, 2),
         default=75.0,
         help='Fallback gold price per gram when API is unavailable. '
@@ -35,7 +35,7 @@ class ResConfigSettings(models.TransientModel):
 
     markup_jewellery_local = fields.Float(
         string='Markup per Gram - Jewellery (Local)',
-        config_parameter='gold_pricing.markup_jewellery_local',
+        config_parameter='jewellery_evaluator.markup_jewellery_local',
         digits=(16, 4),
         default=0.0,
         help='Markup per gram for local jewellery',
@@ -43,7 +43,7 @@ class ResConfigSettings(models.TransientModel):
 
     markup_jewellery_foreign = fields.Float(
         string='Markup per Gram - Jewellery (Foreign)',
-        config_parameter='gold_pricing.markup_jewellery_foreign',
+        config_parameter='jewellery_evaluator.markup_jewellery_foreign',
         digits=(16, 4),
         default=0.0,
         help='Markup per gram for foreign jewellery',
@@ -53,19 +53,19 @@ class ResConfigSettings(models.TransientModel):
     # Bar pricing uses the weight-tier fields below; these are not shown in the config view.
     markup_bars = fields.Float(
         string='Markup per Gram - Bars (deprecated)',
-        config_parameter='gold_pricing.markup_bars',
+        config_parameter='jewellery_evaluator.markup_bars',
         digits=(16, 4),
         default=0.0,
     )
     markup_ingots = fields.Float(
         string='Markup per Gram - Ingots (deprecated)',
-        config_parameter='gold_pricing.markup_ingots',
+        config_parameter='jewellery_evaluator.markup_ingots',
         digits=(16, 4),
         default=0.0,
     )
     markup_coins = fields.Float(
         string='Markup per Gram - Coins (deprecated)',
-        config_parameter='gold_pricing.markup_coins',
+        config_parameter='jewellery_evaluator.markup_coins',
         digits=(16, 4),
         default=0.0,
     )
@@ -73,77 +73,77 @@ class ResConfigSettings(models.TransientModel):
     # Bars: weight-tiered markup (EGP per gram). Weights 1, 2.5, 5, 10, 20, 31, 50, 100, 250, 500, 1000g+.
     markup_bars_1g = fields.Float(
         string='Bars 1g (EGP/g)',
-        config_parameter='gold_pricing.markup_bars_1g',
+        config_parameter='jewellery_evaluator.markup_bars_1g',
         digits=(16, 4),
         default=200.0,
         help='Markup per gram for bars up to 1g',
     )
     markup_bars_2_5g = fields.Float(
         string='Bars 2.5g (EGP/g)',
-        config_parameter='gold_pricing.markup_bars_2_5g',
+        config_parameter='jewellery_evaluator.markup_bars_2_5g',
         digits=(16, 4),
         default=200.0,
         help='Markup per gram for 2.5g tier',
     )
     markup_bars_5g = fields.Float(
         string='Bars 5g (EGP/g)',
-        config_parameter='gold_pricing.markup_bars_5g',
+        config_parameter='jewellery_evaluator.markup_bars_5g',
         digits=(16, 4),
         default=125.0,
         help='Markup per gram for 5g tier',
     )
     markup_bars_10g = fields.Float(
         string='Bars 10g (EGP/g)',
-        config_parameter='gold_pricing.markup_bars_10g',
+        config_parameter='jewellery_evaluator.markup_bars_10g',
         digits=(16, 4),
         default=120.0,
         help='Markup per gram for 10g tier',
     )
     markup_bars_20g = fields.Float(
         string='Bars 20g (EGP/g)',
-        config_parameter='gold_pricing.markup_bars_20g',
+        config_parameter='jewellery_evaluator.markup_bars_20g',
         digits=(16, 4),
         default=120.0,
         help='Markup per gram for 20g tier',
     )
     markup_bars_31g = fields.Float(
         string='Bars 31g (EGP/g)',
-        config_parameter='gold_pricing.markup_bars_31g',
+        config_parameter='jewellery_evaluator.markup_bars_31g',
         digits=(16, 4),
         default=115.0,
         help='Markup per gram for 31g tier',
     )
     markup_bars_50g = fields.Float(
         string='Bars 50g (EGP/g)',
-        config_parameter='gold_pricing.markup_bars_50g',
+        config_parameter='jewellery_evaluator.markup_bars_50g',
         digits=(16, 4),
         default=100.0,
         help='Markup per gram for 50g tier',
     )
     markup_bars_100g = fields.Float(
         string='Bars 100g (EGP/g)',
-        config_parameter='gold_pricing.markup_bars_100g',
+        config_parameter='jewellery_evaluator.markup_bars_100g',
         digits=(16, 4),
         default=100.0,
         help='Markup per gram for 100g tier',
     )
     markup_bars_250g = fields.Float(
         string='Bars 250g (EGP/g)',
-        config_parameter='gold_pricing.markup_bars_250g',
+        config_parameter='jewellery_evaluator.markup_bars_250g',
         digits=(16, 4),
         default=80.0,
         help='Markup per gram for 250g tier',
     )
     markup_bars_500g = fields.Float(
         string='Bars 500g (EGP/g)',
-        config_parameter='gold_pricing.markup_bars_500g',
+        config_parameter='jewellery_evaluator.markup_bars_500g',
         digits=(16, 4),
         default=80.0,
         help='Markup per gram for 500g tier',
     )
     markup_bars_1000g = fields.Float(
         string='Bars 1000g+ (EGP/g)',
-        config_parameter='gold_pricing.markup_bars_1000g',
+        config_parameter='jewellery_evaluator.markup_bars_1000g',
         digits=(16, 4),
         default=80.0,
         help='Markup per gram for bars 1000g and above',
@@ -151,7 +151,7 @@ class ResConfigSettings(models.TransientModel):
 
     global_diamond_discount = fields.Integer(
         string='Global Diamond Discount',
-        config_parameter='gold_pricing.global_diamond_discount',
+        config_parameter='jewellery_evaluator.global_diamond_discount',
         default=40,
         help='Discount percentage (0-80). Sale price = (USD x USD/EGP rate) x (100 - discount) / 100. E.g. 40 = 40%% off.',
     )

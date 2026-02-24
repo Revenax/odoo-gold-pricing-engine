@@ -4,13 +4,13 @@ check: lint test type-check
 	@echo "All checks passed!"
 
 lint:
-	ruff check gold_pricing/ tests/
+	ruff check jewellery_evaluator/ tests/
 
 test:
 	pytest tests/ -v
 
 type-check:
-	mypy gold_pricing/utils.py --ignore-missing-imports
+	mypy jewellery_evaluator/utils.py --ignore-missing-imports
 
 install-dev:
 	pip install -r requirements-dev.txt

@@ -43,25 +43,25 @@ class GoldPriceService(models.Model):
         :return: float - Gold price per gram (21K price)
         """
         api_endpoint = self.env['ir.config_parameter'].sudo().get_param(
-            'gold_pricing.gold_api_endpoint',
+            'jewellery_evaluator.gold_api_endpoint',
             ''
         )
         regex_formula = self.env['ir.config_parameter'].sudo().get_param(
-            'gold_pricing.gold_21k_regex_formula',
+            'jewellery_evaluator.gold_21k_regex_formula',
             ''
         )
 
         if not api_endpoint or not api_endpoint.strip():
             raise ValueError(
                 'Gold API endpoint is not configured. '
-                'Please set the "gold_pricing.gold_api_endpoint" system parameter in '
+                'Please set the "jewellery_evaluator.gold_api_endpoint" system parameter in '
                 'Settings → Technical → Parameters → System Parameters'
             )
 
         if not regex_formula or not regex_formula.strip():
             raise ValueError(
                 'Gold 21K regex formula is not configured. '
-                'Please set the "gold_pricing.gold_21k_regex_formula" system parameter in '
+                'Please set the "jewellery_evaluator.gold_21k_regex_formula" system parameter in '
                 'Settings → Technical → Parameters → System Parameters'
             )
 
@@ -91,7 +91,7 @@ class GoldPriceService(models.Model):
             text = response.text
             price = parse_gold_price_with_regex(text, regex_formula)
             self.env['ir.config_parameter'].sudo().set_param(
-                'gold_pricing.fallback_price',
+                'jewellery_evaluator.fallback_price',
                 str(price),
             )
             _logger.info(
@@ -133,7 +133,7 @@ class GoldPriceService(models.Model):
         :raises ValueError: If fallback price is invalid
         """
         fallback_price_str = self.env['ir.config_parameter'].sudo().get_param(
-            'gold_pricing.fallback_price',
+            'jewellery_evaluator.fallback_price',
             '75.0'  # Default fallback price
         )
         try:

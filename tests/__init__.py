@@ -1,1 +1,1 @@
-# Tests for gold_pricing module
+# Tests for jewellery_evaluator module

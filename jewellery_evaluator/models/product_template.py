@@ -79,7 +79,7 @@ class ProductTemplate(models.Model):
                 "WHERE gold_type IN ('ingots','coins')"
             )
             _logger.info(
-                'gold_pricing: migrated gold_type ingots/coins to bars (runtime cleanup)'
+                'jewellery_evaluator: migrated gold_type ingots/coins to bars (runtime cleanup)'
             )
 
     making_fee = fields.Float(
@@ -251,7 +251,7 @@ class ProductTemplate(models.Model):
         }
 
     @api.onchange('gold_weight_g', 'gold_purity', 'gold_type')
-    def _onchange_gold_pricing_fields(self):
+    def _onchange_jewellery_evaluator_fields(self):
         """Update prices immediately in the UI when gold fields change."""
         try:
             gold_price_service = self.env['gold.price.service']

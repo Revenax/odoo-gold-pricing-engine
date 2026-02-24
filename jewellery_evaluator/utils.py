@@ -26,7 +26,7 @@ def _get_markup_bars_by_weight(env, weight_g: float) -> float:
         return 0.0
     ICP = env['ir.config_parameter'].sudo()
     if weight_g >= 1000:
-        raw = ICP.get_param('gold_pricing.markup_bars_1000g', '0.0')
+        raw = ICP.get_param('jewellery_evaluator.markup_bars_1000g', '0.0')
         try:
             val = float(raw)
         except (TypeError, ValueError):
@@ -43,7 +43,7 @@ def _get_markup_bars_by_weight(env, weight_g: float) -> float:
             best_dist = d
             best_weight = w
     idx = BAR_TIER_WEIGHTS.index(best_weight)
-    param_key = f'gold_pricing.markup_bars_{BAR_TIER_PARAM_SUFFIXES[idx]}'
+    param_key = f'jewellery_evaluator.markup_bars_{BAR_TIER_PARAM_SUFFIXES[idx]}'
     raw_value = ICP.get_param(param_key, '0.0')
     try:
         val = float(raw_value)
@@ -75,7 +75,7 @@ def get_markup_per_gram(env, gold_type: str, weight_g=None) -> float:
             return 0.0
         return _get_markup_bars_by_weight(env, weight_g)
 
-    param_key = f'gold_pricing.markup_{gold_type}'
+    param_key = f'jewellery_evaluator.markup_{gold_type}'
     raw_value = env['ir.config_parameter'].sudo().get_param(param_key, '0.0')
     try:
         return float(raw_value)

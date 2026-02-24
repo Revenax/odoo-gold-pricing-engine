@@ -13,7 +13,7 @@ import { patch } from "@web/core/utils/patch";
 import { _t } from "@web/core/l10n/translation";
 
 /**
- * Override POS discount functionality to enforce gold pricing rules.
+ * Override POS discount functionality to enforce jewellery evaluator rules.
  * This prevents discounts that would violate minimum sale price requirements.
  */
 patch(Orderline.prototype, {

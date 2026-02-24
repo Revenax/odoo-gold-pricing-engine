@@ -42,7 +42,7 @@ class DiamondPriceService(models.Model):
             int: Discount percentage in range 0-80 (default 80)
         """
         raw = self.env['ir.config_parameter'].sudo().get_param(
-            'gold_pricing.global_diamond_discount', '80'
+            'jewellery_evaluator.global_diamond_discount', '80'
         )
         try:
             value = int(raw)

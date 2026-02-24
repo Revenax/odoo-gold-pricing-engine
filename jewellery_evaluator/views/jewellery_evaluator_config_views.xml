@@ -1,17 +1,17 @@
 <?xml version="1.0" encoding="utf-8"?>
 <odoo>
-    <record id="res_config_settings_view_form_gold_pricing" model="ir.ui.view">
-        <field name="name">res.config.settings.view.form.gold.pricing</field>
+    <record id="res_config_settings_view_form_jewellery_evaluator" model="ir.ui.view">
+        <field name="name">res.config.settings.view.form.jewellery.evaluator</field>
         <field name="model">res.config.settings</field>
         <field name="inherit_id" ref="base.res_config_settings_view_form"/>
         <field name="arch" type="xml">
             <xpath expr="//form" position="inside">
-                <div class="app_settings_block" data-string="Gold Pricing" data-key="gold_pricing">
+                <div class="app_settings_block" data-string="Jewellery Evaluator" data-key="jewellery_evaluator">
                     <div class="row mt16 o_settings_container">
                         <div class="col-12 o_setting_box">
                             <div class="o_setting_left_pane"/>
                             <div class="o_setting_right_pane">
-                                <span class="o_form_label">Gold Pricing</span>
+                                <span class="o_form_label">Jewellery Evaluator</span>
                                 <div class="text-muted">
                                     Configure the API source and pricing rules for gold products.
                                 </div>
@@ -212,7 +212,7 @@
                         </div>
                     </div>
                 </div>
-                <div class="app_settings_block" data-string="Point of Sale" data-key="point_of_sale_gold_pricing">
+                <div class="app_settings_block" data-string="Point of Sale" data-key="point_of_sale_jewellery_evaluator">
                     <div class="row mt16 o_settings_container">
                         <div class="col-12 o_setting_box">
                             <div class="o_setting_left_pane"/>

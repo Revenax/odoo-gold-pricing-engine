@@ -10,8 +10,8 @@
     <!-- Invoice line tree (list) view: add Purity and Weight columns.
          optional="show" so columns are visible by default in list/editable tree.
          priority 101 so this inheritance applies after base (100) and columns show. -->
-    <record id="view_move_line_tree_gold_pricing" model="ir.ui.view">
-        <field name="name">account.move.line.tree.gold.pricing</field>
+    <record id="view_move_line_tree_jewellery_evaluator" model="ir.ui.view">
+        <field name="name">account.move.line.tree.jewellery.evaluator</field>
         <field name="model">account.move.line</field>
         <field name="inherit_id" ref="account.view_move_line_tree"/>
         <field name="priority" eval="101"/>
@@ -24,8 +24,8 @@
     </record>
 
     <!-- Invoice line form view: add Purity and Weight fields -->
-    <record id="view_move_line_form_gold_pricing" model="ir.ui.view">
-        <field name="name">account.move.line.form.gold.pricing</field>
+    <record id="view_move_line_form_jewellery_evaluator" model="ir.ui.view">
+        <field name="name">account.move.line.form.jewellery.evaluator</field>
         <field name="model">account.move.line</field>
         <field name="inherit_id" ref="account.view_move_line_form"/>
         <field name="arch" type="xml">
@@ -39,8 +39,8 @@
     <!-- Invoice form: add Purity and Weight to the invoice line list on the move form.
          In Odoo 17 the form may use an inline tree for invoice_line_ids; this xpath
          adds our columns there so they are visible when editing an invoice. -->
-    <record id="view_move_form_gold_pricing" model="ir.ui.view">
-        <field name="name">account.move.form.gold.pricing</field>
+    <record id="view_move_form_jewellery_evaluator" model="ir.ui.view">
+        <field name="name">account.move.form.jewellery.evaluator</field>
         <field name="model">account.move</field>
         <field name="inherit_id" ref="account.view_move_form"/>
         <field name="arch" type="xml">

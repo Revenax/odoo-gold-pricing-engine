@@ -5,8 +5,8 @@
     on the form. inherit_id: point_of_sale.pos_config_view_form.
 -->
 <odoo>
-    <record id="view_pos_config_form_gold_pricing" model="ir.ui.view">
-        <field name="name">pos.config.form.gold.pricing</field>
+    <record id="view_pos_config_form_jewellery_evaluator" model="ir.ui.view">
+        <field name="name">pos.config.form.jewellery.evaluator</field>
         <field name="model">pos.config</field>
         <field name="inherit_id" ref="point_of_sale.pos_config_view_form"/>
         <field name="arch" type="xml">

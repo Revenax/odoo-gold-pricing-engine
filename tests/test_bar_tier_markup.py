@@ -9,14 +9,14 @@ import os
 import sys
 
 try:
-    from gold_pricing_utils import _get_markup_bars_by_weight
+    from jewellery_evaluator_utils import _get_markup_bars_by_weight
 except ImportError:
     import importlib.util
     _project_root = os.path.join(os.path.dirname(__file__), '..')
     sys.path.insert(0, os.path.abspath(_project_root))
     _utils_path = os.path.abspath(
         os.path.join(os.path.dirname(__file__), "..",
-                     "gold_pricing", "utils.py")
+                     "jewellery_evaluator", "utils.py")
     )
     spec = importlib.util.spec_from_file_location("utils", _utils_path)
     utils = importlib.util.module_from_spec(spec)
@@ -26,17 +26,17 @@ except ImportError:
 
 def _make_env(params=None):
     defaults = {
-        'gold_pricing.markup_bars_1g': '200',
-        'gold_pricing.markup_bars_2_5g': '200',
-        'gold_pricing.markup_bars_5g': '125',
-        'gold_pricing.markup_bars_10g': '120',
-        'gold_pricing.markup_bars_20g': '120',
-        'gold_pricing.markup_bars_31g': '115',
-        'gold_pricing.markup_bars_50g': '100',
-        'gold_pricing.markup_bars_100g': '100',
-        'gold_pricing.markup_bars_250g': '80',
-        'gold_pricing.markup_bars_500g': '80',
-        'gold_pricing.markup_bars_1000g': '80',
+        'jewellery_evaluator.markup_bars_1g': '200',
+        'jewellery_evaluator.markup_bars_2_5g': '200',
+        'jewellery_evaluator.markup_bars_5g': '125',
+        'jewellery_evaluator.markup_bars_10g': '120',
+        'jewellery_evaluator.markup_bars_20g': '120',
+        'jewellery_evaluator.markup_bars_31g': '115',
+        'jewellery_evaluator.markup_bars_50g': '100',
+        'jewellery_evaluator.markup_bars_100g': '100',
+        'jewellery_evaluator.markup_bars_250g': '80',
+        'jewellery_evaluator.markup_bars_500g': '80',
+        'jewellery_evaluator.markup_bars_1000g': '80',
     }
     if params:
         defaults.update(params)
