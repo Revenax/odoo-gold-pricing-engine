@@ -11,4 +11,6 @@ done
 
 ruff check jewellery_evaluator/ tests/
 pytest tests/ -v
-mypy jewellery_evaluator/utils.py --ignore-missing-imports
+# Run mypy from inside jewellery_evaluator so the repo root (e.g. odoo-jewellery-evaluator)
+# is not treated as a package; mypy rejects directory names with hyphens.
+(cd jewellery_evaluator && mypy utils.py --config-file ../pyproject.toml --ignore-missing-imports)
