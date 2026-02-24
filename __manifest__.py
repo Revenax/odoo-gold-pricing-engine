@@ -31,8 +31,8 @@
         'stock',
     ],
     'data': [
-        'jewellery_evaluator/security/ir.model.access.csv',
         'jewellery_evaluator/security/jewellery_evaluator_security.xml',
+        'jewellery_evaluator/security/ir.model.access.csv',
         'jewellery_evaluator/views/jewellery_evaluator_config_views.xml',
         'jewellery_evaluator/views/pos_config_views.xml',
         'jewellery_evaluator/views/pos_order_views.xml',
