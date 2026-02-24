@@ -41,7 +41,7 @@ if [ -f "$ENV_FILE" ]; then
 fi
 
 if [ -z "${EC2_SSH_KEY:-}" ]; then
-  echo "Error: EC2_SSH_KEY is not set. Put EC2_HOST, EC2_USER, EC2_SSH_KEY, EC2_MODULE_PATH in .env"
+  echo "Error: EC2_SSH_KEY not set. Set EC2_HOST, EC2_USER, EC2_SSH_KEY, EC2_GIT_REPO_PATH in .env"
   exit 1
 fi
 
