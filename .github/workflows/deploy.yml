@@ -1,14 +1,10 @@
-name: Check and Deploy
+name: CI/CD
 
 on:
   push:
-    branches:
-      - main
-      - ci-cd
+    branches: [main, ci-cd]
   pull_request:
-    branches:
-      - main
-      - ci-cd
+    branches: [main, ci-cd]
 
 jobs:
   check:
@@ -22,15 +18,13 @@ jobs:
           python-version: "3.10"
 
       - name: Install dependencies
-        run: |
-          python -m pip install --upgrade pip
-          pip install -r requirements-dev.txt
+        run: pip install -r requirements-dev.txt
 
       - name: Run checks
         run: ./scripts/ci.sh
 
   deploy:
-    name: Deploy to EC2
+    name: CD
     needs: check
     runs-on: ubuntu-latest
     if: github.event_name == 'push' && github.ref == 'refs/heads/main'
@@ -42,20 +36,17 @@ jobs:
           EC2_HOST: ${{ secrets.EC2_HOST }}
           EC2_USER: ${{ secrets.EC2_USER }}
           EC2_SSH_KEY: ${{ secrets.EC2_SSH_KEY }}
-          EC2_MODULE_PATH: ${{ secrets.EC2_MODULE_PATH }}
           EC2_GIT_REPO_PATH: ${{ secrets.EC2_GIT_REPO_PATH }}
         run: |
           set -euo pipefail
-          for var in EC2_HOST EC2_USER EC2_SSH_KEY EC2_MODULE_PATH; do
-            eval "val=\${$var:-}"
-            if [ -z "$val" ]; then echo "Error: $var secret is not set"; exit 1; fi
+          [ -n "${EC2_GIT_REPO_PATH:-}" ] || { echo "Error: EC2_GIT_REPO_PATH secret not set"; exit 1; }
+          for var in EC2_HOST EC2_USER EC2_SSH_KEY; do
+            [ -n "${!var}" ] || { echo "Error: $var secret not set"; exit 1; }
           done
-          GIT_REPO_PATH="${EC2_GIT_REPO_PATH:-$EC2_MODULE_PATH}"
-          DEPLOY_TARGET="$EC2_MODULE_PATH"
-          mkdir -p ~/.ssh
-          echo "$EC2_SSH_KEY" > ~/.ssh/deploy_key
-          chmod 600 ~/.ssh/deploy_key
+          key="$HOME/.ssh/deploy_key"
+          printf '%s' "$EC2_SSH_KEY" > "$key"
+          chmod 600 "$key"
           ssh-keyscan -H "$EC2_HOST" >> ~/.ssh/known_hosts 2>/dev/null || true
-          ssh -i ~/.ssh/deploy_key -o StrictHostKeyChecking=no -o UserKnownHostsFile=~/.ssh/known_hosts \
-            "${EC2_USER}@${EC2_HOST}" "GIT_REPO_PATH='${GIT_REPO_PATH}' DEPLOY_TARGET='${DEPLOY_TARGET}' bash -s" < scripts/remote-deploy.sh
-          rm -f ~/.ssh/deploy_key
+          ssh -i "$key" -o StrictHostKeyChecking=no "${EC2_USER}@${EC2_HOST}" \
+            "GIT_REPO_PATH='$EC2_GIT_REPO_PATH' bash -s" < scripts/remote-deploy.sh
+          rm -f "$key"

@@ -359,8 +359,7 @@ The repository includes a GitHub Actions workflow (`.github/workflows/deploy.yml
    - `EC2_HOST`: Your EC2 instance hostname or IP (e.g., `ec2-xxx.compute.amazonaws.com`)
    - `EC2_USER`: SSH username (e.g., `ec2-user`, `ubuntu`, `admin`)
    - `EC2_SSH_KEY`: Private SSH key content for EC2 access
-   - `EC2_MODULE_PATH`: Path where Odoo expects the module (deploy target), e.g. `/opt/odoo/custom-addons/gold_pricing`
-   - `EC2_GIT_REPO_PATH` (optional): Path to the git repo on the server if different from the module path, e.g. `/opt/odoo/custom-addons/odoo-gold-pricing-engine`. If unset, `EC2_MODULE_PATH` is used for both pull and deploy (repo and module in the same place).
+   - `EC2_GIT_REPO_PATH`: Path to the repo on the server (where we pull and run the module), e.g. `/opt/odoo/custom-addons/gold_pricing`
    **Deploy user sudo (required for auto upgrade + restart):** The remote script runs `sudo -u odoo odoo -u gold_pricing --stop-after-init -c /etc/odoo.conf` then `sudo systemctl restart odoo`. On the EC2 instance, allow the deploy user to run these without a password:
    ```bash
    sudo visudo
@@ -372,18 +371,14 @@ The repository includes a GitHub Actions workflow (`.github/workflows/deploy.yml
    ```
    If `odoo` is not at `/usr/bin/odoo`, use the full path (e.g. `/opt/odoo/venv/bin/odoo`). Save and exit.
 
-2. **Give the deploy user access to both paths** (avoids "Permission denied" on `cd`):
-   CI runs as `EC2_USER` (e.g. `ubuntu`) and must be able to `cd` into the **git repo path** (pull) and write to the **deploy target** (copy). **Recommended: fix permissions** (no sudo in the pipeline).
-   - **Option A (recommended):** On the EC2 instance, make the deploy user able to traverse and write:
+2. **Give the deploy user access to the repo path** (avoids "Permission denied" on `cd`):
+   CI runs as `EC2_USER` (e.g. `ubuntu`) and must be able to `cd` into `EC2_GIT_REPO_PATH` and run `git pull` there.
+   - **Option A (recommended):** On the EC2 instance, make the deploy user owner of the repo directory:
      ```bash
-     # Traverse to repo and deploy target (e.g. repo name != module name):
      sudo chmod o+x /opt /opt/odoo /opt/odoo/custom-addons
-     sudo chown -R ubuntu:ubuntu /opt/odoo/custom-addons/odoo-gold-pricing-engine   # git repo (pull here)
-     sudo mkdir -p /opt/odoo/custom-addons/gold_pricing
-     sudo chown -R ubuntu:ubuntu /opt/odoo/custom-addons/gold_pricing               # deploy target (Odoo module path)
+     sudo chown -R ubuntu:ubuntu /opt/odoo/custom-addons/gold_pricing
      ```
-     Deploy will `git pull` in the repo path, then copy `gold_pricing/` to the deploy target.
-   - **Option B (use sudo):** Run the remote deploy script with sudo so it can cd into a root-owned path. That requires passwordless sudo for the deploy user (e.g. `ubuntu ALL=(ALL) NOPASSWD: /bin/bash` or a wrapper script in sudoers). In `.github/workflows/deploy.yml`, change the SSH run to pass the script to `sudo bash -s` instead of `bash -s`. Note: the repo will then be updated as root; ensure the Odoo process user can read the files (e.g. world/group read or run a chown in the script).
+   - **Option B (use sudo):** Run the remote deploy script with sudo so it can cd into a root-owned path (e.g. pass the script to `sudo bash -s`). Ensure the Odoo process user can read the files after update.
 
 3. **Generate SSH Key** (if needed):
    ```bash
@@ -405,12 +400,9 @@ The repository includes a GitHub Actions workflow (`.github/workflows/deploy.yml
 #### Deployment Process
 
 The automated deployment:
-- ✅ Runs all pre-deployment checks first
-- ✅ Only deploys if all checks pass
-- ✅ Pulls in the git repo path, then copies `gold_pricing/` to the deploy target (when repo path ≠ module path)
-- ✅ Uses `git pull --ff-only` for atomic updates (prevents conflicts)
-- ✅ Validates Python syntax before completing
-- ✅ Upgrades the module (`odoo -u gold_pricing --stop-after-init`) then restarts Odoo (`systemctl restart odoo`)
+- Runs all pre-deployment checks first; deploys only if they pass
+- SSHs to the server, `cd`s to `EC2_GIT_REPO_PATH`, runs `git pull --ff-only` (or rebase on failure)
+- Stops Odoo, runs module upgrade (`odoo -u <module_name> --stop-after-init`), then restarts Odoo
 
 #### Disabling Auto-Deploy
 

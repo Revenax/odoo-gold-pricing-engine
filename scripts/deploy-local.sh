@@ -1,7 +1,7 @@
 #!/bin/bash
 # Run the same deploy as CI, locally. Reads EC2_* from .env (supports multi-line EC2_SSH_KEY).
 # Requires: ssh, ssh-keygen, base64 (standard on macOS/Linux).
-# Usage: put EC2_HOST, EC2_USER, EC2_SSH_KEY and EC2_GIT_REPO_PATH (or EC2_MODULE_PATH) in .env; ./scripts/deploy-local.sh
+# Usage: set EC2_HOST, EC2_USER, EC2_SSH_KEY, EC2_GIT_REPO_PATH in .env; ./scripts/deploy-local.sh
 
 set -euo pipefail
 
@@ -45,18 +45,11 @@ if [ -z "${EC2_SSH_KEY:-}" ]; then
   exit 1
 fi
 
-for var in EC2_HOST EC2_USER; do
+for var in EC2_HOST EC2_USER EC2_GIT_REPO_PATH; do
   eval "val=\${$var:-}"
-  if [ -z "$val" ]; then echo "Error: $var is not set"; exit 1; fi
+  [ -n "$val" ] || { echo "Error: $var not set in .env"; exit 1; }
 done
-
-# GIT_REPO_PATH = where the repo/module lives on the server (e.g. /opt/odoo/addons/gold_pricing).
-# You can set EC2_GIT_REPO_PATH explicitly, or fall back to EC2_MODULE_PATH for backward compatibility.
-GIT_REPO_PATH="${EC2_GIT_REPO_PATH:-${EC2_MODULE_PATH:-}}"
-if [ -z "$GIT_REPO_PATH" ]; then
-  echo "Error: set EC2_GIT_REPO_PATH (or EC2_MODULE_PATH for legacy setups) in .env"
-  exit 1
-fi
+GIT_REPO_PATH="$EC2_GIT_REPO_PATH"
 
 # Check required commands (standard on macOS/Linux)
 for cmd in ssh ssh-keygen; do
