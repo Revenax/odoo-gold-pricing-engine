@@ -18,7 +18,7 @@ sys.path.insert(0, _project_root)
 
 
 def pytest_ignore_collect(collection_path, config):
-    """Do not collect the repo root __init__.py (invalid as package when dir has hyphens)."""
+    """Do not collect repo root __init__.py (repo dir name may have hyphens; not a valid package)."""
     try:
         root = config.rootpath.resolve()
         path = collection_path.resolve()

@@ -5,6 +5,7 @@ set -euo pipefail
 
 [ -n "${GIT_REPO_PATH:-}" ] || { echo "Error: GIT_REPO_PATH not set"; exit 1; }
 
+# Module name = directory name so Odoo finds it (e.g. odoo-jewellery-evaluator when repo is cloned thus).
 MODULE_NAME="${MODULE_NAME:-$(basename "$GIT_REPO_PATH")}"
 cd "$GIT_REPO_PATH" || exit 1
 [ -d .git ] || { echo "Error: not a git repo. Clone into $GIT_REPO_PATH first."; exit 1; }
