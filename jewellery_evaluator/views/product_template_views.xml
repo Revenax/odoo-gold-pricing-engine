@@ -28,7 +28,7 @@
                         <group invisible="jewellery_type != 'diamond_jewellery'">
                             <group col="2">
                                 <field name="diamond_karat" string="Jewellery Karat"/>
-                                <field name="diamond_usd_price" string="Diamond USD Ticket Price" groups="jewellery_evaluator.group_jewellery_evaluator_manager"/>
+                                <field name="diamond_usd_price" string="Diamond USD Ticket Price"/>
                             </group>
                         </group>
                         <group invisible="jewellery_type != 'silver'">
