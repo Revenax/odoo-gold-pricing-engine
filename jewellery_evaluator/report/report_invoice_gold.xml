@@ -14,9 +14,6 @@
             }
         ]]></style>
         <t t-set="report_product_lines" t-value="o.invoice_line_ids.filtered(lambda l: l.display_type not in ('line_section', 'line_note', 'rounding'))"/>
-        <t t-set="report_show_jewellery_type" t-value="any(l.jewellery_type for l in report_product_lines)"/>
-        <t t-set="report_show_karat" t-value="any(l.gold_purity or l.diamond_karat or l.silver_purity for l in report_product_lines)"/>
-        <t t-set="report_show_weight" t-value="any(l.jewellery_weight_g or l.gold_weight_g for l in report_product_lines)"/>
         <t t-set="report_show_quantity" t-value="any(l.quantity != 1 for l in report_product_lines)"/>
         <t t-set="report_show_unit_price" t-value="report_show_quantity"/>
     </xpath>
@@ -69,11 +66,10 @@
             </div>
         </xpath>
 
-        <!-- Jewellery invoice: Type, Karat/Purity and Weight columns (only when needed). -->
+        <!-- Jewellery invoice: single Karat and Weight columns (always shown). -->
         <xpath expr="//th[@name='th_description']" position="after">
-            <t t-if="report_show_jewellery_type"><th name="th_jewellery_type" class="text-end"><span>Jewellery Type</span></th></t>
-            <t t-if="report_show_karat"><th name="th_karat" class="text-end"><span>Karat/Purity</span></th></t>
-            <t t-if="report_show_weight"><th name="th_weight" class="text-end"><span>Weight (g)</span></th></t>
+            <th name="th_karat" class="text-end"><span>Karat</span></th>
+            <th name="th_weight" class="text-end"><span>Weight (g)</span></th>
         </xpath>
 
         <!-- Our custom payment block -->
@@ -92,24 +88,17 @@
             </div>
         </xpath>
 
-        <!-- Add Jewellery cells to each product line (only if column is shown). -->
+        <!-- Add unified Karat and Weight cells to each product line. -->
         <xpath expr="//td[@name='account_invoice_line_name']" position="after">
-            <t t-if="report_show_jewellery_type"><td name="td_jewellery_type" class="text-end">
-                <span t-if="line.jewellery_type == 'gold_local'">Gold - Local</span>
-                <span t-elif="line.jewellery_type == 'gold_foreign'">Gold - Foreign</span>
-                <span t-elif="line.jewellery_type == 'gold_bars'">Gold Bars</span>
-                <span t-elif="line.jewellery_type == 'diamond_jewellery'">Diamond Jewellery</span>
-                <span t-elif="line.jewellery_type == 'silver'">Silver</span>
-            </td></t>
-            <t t-if="report_show_karat"><td name="td_karat" class="text-end">
+            <td name="td_karat" class="text-end">
                 <span t-if="line.gold_purity" t-field="line.gold_purity"/>
                 <span t-elif="line.diamond_karat" t-field="line.diamond_karat"/>
                 <span t-elif="line.silver_purity" t-field="line.silver_purity"/>
-            </td></t>
-            <t t-if="report_show_weight"><td name="td_weight" class="text-end">
+            </td>
+            <td name="td_weight" class="text-end">
                 <span t-if="line.jewellery_weight_g" t-field="line.jewellery_weight_g"/>
                 <span t-elif="line.gold_weight_g" t-field="line.gold_weight_g"/>
-            </td></t>
+            </td>
         </xpath>
 
         
