@@ -56,12 +56,14 @@ class AccountMoveLine(models.Model):
     karat_display = fields.Char(
         string='Karat',
         compute='_compute_jewellery_display_fields',
+        inverse='_inverse_karat_display',
         help='Unified karat display (gold purity, diamond karat, or silver purity).',
     )
     weight_display_g = fields.Float(
         string='Weight (g)',
         digits=(16, 2),
         compute='_compute_jewellery_display_fields',
+        inverse='_inverse_weight_display_g',
         help='Unified weight display in grams.',
     )
 
@@ -107,3 +109,41 @@ class AccountMoveLine(models.Model):
                 or line.gold_weight_g
                 or 0.0
             )
+
+    def _inverse_karat_display(self):
+        """
+        Persist editable unified karat into the proper underlying field.
+
+        Rules:
+        - 24K/21K/18K -> gold_purity
+        - 999.0/999.9 -> silver_purity
+        - anything else -> diamond_karat
+        """
+        gold_allowed = {'24K', '21K', '18K'}
+        silver_allowed = {'999.0', '999.9'}
+        for line in self:
+            value = (line.karat_display or '').strip()
+            if not value:
+                line.gold_purity = False
+                line.silver_purity = False
+                line.diamond_karat = False
+                continue
+            if value in gold_allowed:
+                line.gold_purity = value
+                line.silver_purity = False
+                line.diamond_karat = False
+            elif value in silver_allowed:
+                line.gold_purity = False
+                line.silver_purity = value
+                line.diamond_karat = False
+            else:
+                line.gold_purity = False
+                line.silver_purity = False
+                line.diamond_karat = value
+
+    def _inverse_weight_display_g(self):
+        """Persist editable unified weight to both new and legacy weight fields."""
+        for line in self:
+            value = line.weight_display_g or 0.0
+            line.jewellery_weight_g = value
+            line.gold_weight_g = value

@@ -14,8 +14,8 @@
         <field name="priority" eval="101"/>
         <field name="arch" type="xml">
             <xpath expr="//field[@name='name']" position="after">
-                <field name="karat_display" string="Karat" optional="show" readonly="1"/>
-                <field name="weight_display_g" string="Weight" optional="show" readonly="1"/>
+                <field name="karat_display" string="Karat" optional="show"/>
+                <field name="weight_display_g" string="Weight" optional="show"/>
             </xpath>
         </field>
     </record>
@@ -27,8 +27,8 @@
         <field name="inherit_id" ref="account.view_move_line_form"/>
         <field name="arch" type="xml">
             <xpath expr="//field[@name='name']" position="after">
-                <field name="karat_display" string="Karat" readonly="1"/>
-                <field name="weight_display_g" string="Weight" readonly="1"/>
+                <field name="karat_display" string="Karat"/>
+                <field name="weight_display_g" string="Weight"/>
             </xpath>
         </field>
     </record>
@@ -42,8 +42,8 @@
         <field name="inherit_id" ref="account.view_move_form"/>
         <field name="arch" type="xml">
             <xpath expr="//field[@name='invoice_line_ids']/tree/field[@name='quantity']" position="before">
-                <field name="karat_display" string="Karat" readonly="1"/>
-                <field name="weight_display_g" string="Weight" readonly="1"/>
+                <field name="karat_display" string="Karat"/>
+                <field name="weight_display_g" string="Weight"/>
             </xpath>
         </field>
     </record>
