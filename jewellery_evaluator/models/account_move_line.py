@@ -18,10 +18,41 @@ GOLD_TYPE_SELECTION = [
     ('jewellery_foreign', 'Jewellery - Foreign'),
     ('bars', 'Bars'),
 ]
+JEWELLERY_TYPE_SELECTION = [
+    ('gold_local', 'Gold - Local'),
+    ('gold_foreign', 'Gold - Foreign'),
+    ('gold_bars', 'Gold Bars'),
+    ('diamond_jewellery', 'Diamond Jewellery'),
+    ('silver', 'Silver'),
+]
+SILVER_PURITY_SELECTION = [
+    ('999.0', '999.0'),
+    ('999.9', '999.9'),
+]
 
 
 class AccountMoveLine(models.Model):
     _inherit = 'account.move.line'
+
+    jewellery_type = fields.Selection(
+        selection=JEWELLERY_TYPE_SELECTION,
+        string='Jewellery Type',
+        help='Jewellery type for this invoice line.',
+    )
+    jewellery_weight_g = fields.Float(
+        string='Jewellery Weight (g)',
+        digits=(16, 2),
+        help='Jewellery weight in grams for this line.',
+    )
+    diamond_karat = fields.Char(
+        string='Diamond Karat',
+        help='Diamond karat/grade for this line.',
+    )
+    silver_purity = fields.Selection(
+        selection=SILVER_PURITY_SELECTION,
+        string='Silver Purity',
+        help='Silver purity for this line.',
+    )
 
     gold_purity = fields.Selection(
         selection=GOLD_PURITY_SELECTION,

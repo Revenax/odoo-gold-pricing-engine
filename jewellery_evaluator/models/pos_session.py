@@ -25,12 +25,18 @@ class PosSession(models.Model):
         fields = list(params.get('search_params', {}).get('fields', []))
 
         gold_fields = [
+            'jewellery_type',
+            'jewellery_weight_g',
+            'diamond_karat',
+            'silver_purity',
             'gold_min_sale_price',
             'gold_cost_price',
             'gold_weight_g',
             'gold_purity',
             'gold_type',
             'is_gold_product',
+            'is_diamond_product',
+            'is_silver_product',
         ]
 
         for field_name in gold_fields:

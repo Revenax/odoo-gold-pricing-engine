@@ -21,6 +21,17 @@ GOLD_TYPE_SELECTION = [
     ('jewellery_foreign', 'Jewellery - Foreign'),
     ('bars', 'Bars'),
 ]
+JEWELLERY_TYPE_SELECTION = [
+    ('gold_local', 'Gold - Local'),
+    ('gold_foreign', 'Gold - Foreign'),
+    ('gold_bars', 'Gold Bars'),
+    ('diamond_jewellery', 'Diamond Jewellery'),
+    ('silver', 'Silver'),
+]
+SILVER_PURITY_SELECTION = [
+    ('999.0', '999.0'),
+    ('999.9', '999.9'),
+]
 
 
 class PosOrder(models.Model):
@@ -40,17 +51,25 @@ class PosOrder(models.Model):
 
     def _enrich_order_line_vals_with_gold(self, line_vals):
         """
-        Add gold-specific fields to a single order line vals dict when the
-        product is a gold product. Used when building order from UI.
+        Add jewellery and gold-specific fields to a single order line vals dict.
+        Used when building order from UI.
         """
         product_id = line_vals.get('product_id')
         if not product_id:
             return
         product = self.env['product.product'].browse(product_id)
-        if not product.exists() or not getattr(product, 'is_gold_product', False):
+        if not product.exists():
+            return
+
+        line_vals['jewellery_type'] = getattr(product, 'jewellery_type', False)
+        line_vals['jewellery_weight_g'] = getattr(product, 'jewellery_weight_g', 0.0) or 0.0
+        line_vals['diamond_karat'] = getattr(product, 'diamond_karat', False)
+        line_vals['silver_purity'] = getattr(product, 'silver_purity', False)
+
+        if not getattr(product, 'is_gold_product', False):
             return
         line_vals['gold_purity'] = product.gold_purity
-        line_vals['gold_weight_g'] = product.gold_weight_g or 0.0
+        line_vals['gold_weight_g'] = product.jewellery_weight_g or 0.0
         line_vals['gold_type'] = product.gold_type
         line_vals['making_fee'] = getattr(product, 'making_fee', 0.0) or 0.0
         try:
@@ -107,10 +126,10 @@ class PosOrder(models.Model):
 
                     # Check if discount exceeds 50% of markup
                     # Markup total = markup per gram × weight (from settings)
-                    has_weight = product.gold_weight_g and product.gold_weight_g > 0
+                    has_weight = product.jewellery_weight_g and product.jewellery_weight_g > 0
                     if product.gold_type and has_weight:
                         weight_for_markup = (
-                            product.gold_weight_g if product.gold_type == 'bars' else None
+                            product.jewellery_weight_g if product.gold_type == 'bars' else None
                         )
                         markup_per_gram = get_markup_per_gram(
                             self.env,
@@ -119,7 +138,7 @@ class PosOrder(models.Model):
                         )
 
                         if markup_per_gram > 0 and product.list_price > 0:
-                            markup_total = markup_per_gram * product.gold_weight_g
+                            markup_total = markup_per_gram * product.jewellery_weight_g
                             max_discount_percent = (
                                 markup_total * 0.5 / product.list_price
                             ) * 100
@@ -216,6 +235,13 @@ class PosOrder(models.Model):
         invoice report can display them.
         """
         result = super()._get_invoice_lines_values(line_values, pos_order_line)
+        jewellery_fields = [
+            'jewellery_type', 'jewellery_weight_g', 'diamond_karat', 'silver_purity',
+        ]
+        for fname in jewellery_fields:
+            if hasattr(pos_order_line, fname):
+                result[fname] = pos_order_line[fname]
+
         product = pos_order_line.product_id
         if not product or not getattr(product, 'is_gold_product', False):
             return result
@@ -243,6 +269,25 @@ class PosOrder(models.Model):
 class PosOrderLine(models.Model):
     _inherit = 'pos.order.line'
 
+    jewellery_type = fields.Selection(
+        selection=JEWELLERY_TYPE_SELECTION,
+        string='Jewellery Type',
+        help='Jewellery type at order time (copied from product).',
+    )
+    jewellery_weight_g = fields.Float(
+        string='Jewellery Weight (g)',
+        digits=(16, 2),
+        help='Jewellery weight in grams at order time (copied from product).',
+    )
+    diamond_karat = fields.Char(
+        string='Diamond Karat',
+        help='Diamond karat/grade at order time (copied from product).',
+    )
+    silver_purity = fields.Selection(
+        selection=SILVER_PURITY_SELECTION,
+        string='Silver Purity',
+        help='Silver purity at order time (copied from product).',
+    )
     gold_purity = fields.Selection(
         selection=GOLD_PURITY_SELECTION,
         string='Gold Purity',

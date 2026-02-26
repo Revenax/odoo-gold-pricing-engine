@@ -154,7 +154,7 @@ def compute_gold_product_price(
 
     Args:
         base_gold_price_21k: Base 21K gold price per gram (from API)
-        purity: Gold purity ('24K', '21K', '18K', '14K', '10K')
+        purity: Gold purity ('24K', '21K', '18K')
         weight_g: Weight of gold in grams
         markup_per_gram: Markup per gram (from settings)
 
@@ -170,8 +170,6 @@ def compute_gold_product_price(
         '24K': Decimal('8') / Decimal('7'),         # 8/7 of 21K
         '21K': Decimal('1.0'),                       # 1.0000
         '18K': Decimal('7') / Decimal('8'),          # 7/8 of 21K
-        '14K': Decimal('0.583') / Decimal('0.875'),  # 0.6663
-        '10K': Decimal('0.417') / Decimal('0.875'),  # 0.4766
     }
 
     purity_factor = purity_factors.get(purity, Decimal('0'))

@@ -5,29 +5,36 @@
         <field name="model">product.template</field>
         <field name="inherit_id" ref="product.product_template_form_view"/>
         <field name="arch" type="xml">
-            <!-- Add gold pricing fields to the form view -->
             <xpath expr="//notebook" position="inside">
-                <page string="Gold">
+                <page string="Jewellery">
                     <group>
                         <field name="is_gold_product" invisible="1"/>
-                        <group col="3">
-                            <field name="gold_weight_g"/>
-                            <field name="gold_purity"/>
-                            <field name="gold_type" groups="jewellery_evaluator.group_jewellery_evaluator_manager"/>
-                        </group>
-                        <group invisible="not is_gold_product">
-                            <field name="gold_cost_price" readonly="1" groups="base.group_system"/>
-                            <field name="gold_min_sale_price" readonly="1"/>
-                        </group>
-                    </group>
-                </page>
-            </xpath>
-            <xpath expr="//notebook" position="inside">
-                <page string="Diamond">
-                    <group>
                         <field name="is_diamond_product" invisible="1"/>
+                        <field name="is_silver_product" invisible="1"/>
                         <group col="2">
-                            <field name="diamond_usd_price" groups="jewellery_evaluator.group_jewellery_evaluator_manager"/>
+                            <field name="jewellery_type"/>
+                            <field name="jewellery_weight_g"/>
+                        </group>
+                        <group invisible="jewellery_type not in ('gold_local', 'gold_foreign', 'gold_bars')">
+                            <group col="2">
+                                <field name="gold_purity" string="Jewellery Karat"/>
+                                <field name="gold_type" invisible="1" groups="jewellery_evaluator.group_jewellery_evaluator_manager"/>
+                            </group>
+                            <group col="2">
+                                <field name="gold_cost_price" readonly="1" groups="base.group_system"/>
+                                <field name="gold_min_sale_price" readonly="1"/>
+                            </group>
+                        </group>
+                        <group invisible="jewellery_type != 'diamond_jewellery'">
+                            <group col="2">
+                                <field name="diamond_karat" string="Jewellery Karat"/>
+                                <field name="diamond_usd_price" string="Diamond USD Ticket Price" groups="jewellery_evaluator.group_jewellery_evaluator_manager"/>
+                            </group>
+                        </group>
+                        <group invisible="jewellery_type != 'silver'">
+                            <group col="2">
+                                <field name="silver_purity" string="Jewellery Karat"/>
+                            </group>
                         </group>
                     </group>
                 </page>
@@ -42,7 +49,10 @@
         <field name="inherit_id" ref="product.product_template_tree_view"/>
         <field name="arch" type="xml">
             <xpath expr="//field[@name='list_price']" position="after">
+                <field name="jewellery_type" optional="show"/>
                 <field name="is_gold_product" optional="hide"/>
+                <field name="is_diamond_product" optional="hide"/>
+                <field name="is_silver_product" optional="hide"/>
                 <field name="gold_min_sale_price" optional="hide" 
                        invisible="not is_gold_product"/>
             </xpath>

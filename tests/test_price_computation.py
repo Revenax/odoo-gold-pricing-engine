@@ -81,6 +81,15 @@ def test_invalid_purity_raises_error():
         assert "Invalid purity" in str(e)
 
 
+def test_legacy_14k_purity_raises_error():
+    """Test that legacy 14K purity is no longer supported."""
+    try:
+        compute_gold_product_price(100.0, '14K', 10.0, 5.0)
+        raise AssertionError("Should have raised ValueError")
+    except ValueError as e:
+        assert "Invalid purity" in str(e)
+
+
 def test_zero_weight_raises_error():
     """Test that zero weight raises ValueError."""
     try:

@@ -11,15 +11,21 @@ class AccountMove(models.Model):
 
     def _get_gold_invoice_lines(self):
         """
-        Return invoice lines that have gold-specific data (for report).
+        Return invoice lines that have jewellery data (for report).
         Used by the gold invoice report template.
         Excludes section/note/rounding lines; includes product lines
-        (display_type 'product' or False) that have gold data.
+        (display_type 'product' or False) that have jewellery data.
         """
         self.ensure_one()
         return self.invoice_line_ids.filtered(
             lambda line: line.display_type not in (
                 'line_section', 'line_note', 'rounding'
             )
-            and (line.gold_weight_g or line.gold_purity)
+            and (
+                line.jewellery_type
+                or line.jewellery_weight_g
+                or line.gold_purity
+                or line.diamond_karat
+                or line.silver_purity
+            )
         )

@@ -69,3 +69,66 @@ class TestGoldPricingCron(common.TransactionCase):
         self.assertIn("message", result)
         self.assertTrue(result["success"])
         self.assertEqual(result["base_price"], 100.0)
+
+    def test_update_all_gold_product_prices_skips_silver(self):
+        """Gold cron should update only gold jewellery types."""
+        self.env["ir.config_parameter"].sudo().set_param(
+            "jewellery_evaluator.markup_jewellery_local", "5.0"
+        )
+        product_model = self.env["product.template"].with_context(
+            skip_gold_price_update=True,
+            skip_diamond_price_update=True,
+        )
+        gold_product = product_model.create({
+            "name": "Gold Cron Product",
+            "jewellery_type": "gold_local",
+            "jewellery_weight_g": 10.0,
+            "gold_purity": "21K",
+        })
+        silver_product = product_model.create({
+            "name": "Silver Cron Product",
+            "jewellery_type": "silver",
+            "silver_purity": "999.9",
+            "jewellery_weight_g": 10.0,
+            "list_price": 1234.0,
+        })
+
+        service = self.env["gold.price.service"]
+        with mock.patch.object(
+            type(service),
+            "_fetch_gold_price_from_api",
+            return_value=100.0,
+        ):
+            service.update_all_gold_product_prices()
+
+        gold_product.invalidate_cache()
+        silver_product.invalidate_cache()
+        self.assertGreater(gold_product.list_price, 0.0)
+        self.assertEqual(silver_product.list_price, 1234.0)
+
+    def test_update_all_diamond_product_prices_skips_silver(self):
+        """Diamond cron should update only diamond jewellery types."""
+        product_model = self.env["product.template"].with_context(
+            skip_gold_price_update=True,
+            skip_diamond_price_update=True,
+        )
+        diamond_product = product_model.create({
+            "name": "Diamond Cron Product",
+            "jewellery_type": "diamond_jewellery",
+            "diamond_usd_price": 100.0,
+        })
+        silver_product = product_model.create({
+            "name": "Silver Diamond Guard Product",
+            "jewellery_type": "silver",
+            "silver_purity": "999.9",
+            "diamond_usd_price": 200.0,
+            "list_price": 777.0,
+        })
+
+        service = self.env["diamond.price.service"]
+        service.update_all_diamond_product_prices()
+
+        diamond_product.invalidate_cache()
+        silver_product.invalidate_cache()
+        self.assertGreater(diamond_product.list_price, 0.0)
+        self.assertEqual(silver_product.list_price, 777.0)

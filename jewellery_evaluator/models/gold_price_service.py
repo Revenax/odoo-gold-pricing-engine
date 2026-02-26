@@ -169,10 +169,9 @@ class GoldPriceService(models.Model):
             # Get all gold products with required data
             # Only update products that have weight, purity, and type configured
             gold_products = self.env['product.template'].search([
-                ('is_gold_product', '=', True),
+                ('jewellery_type', 'in', ['gold_local', 'gold_foreign', 'gold_bars']),
                 ('gold_purity', '!=', False),
-                ('gold_type', '!=', False),
-                ('gold_weight_g', '>', 0),
+                ('jewellery_weight_g', '>', 0),
             ])
 
             if not gold_products:

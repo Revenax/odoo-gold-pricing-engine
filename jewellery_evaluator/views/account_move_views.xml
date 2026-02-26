@@ -17,6 +17,10 @@
         <field name="priority" eval="101"/>
         <field name="arch" type="xml">
             <xpath expr="//field[@name='name']" position="after">
+                <field name="jewellery_type" optional="show"/>
+                <field name="jewellery_weight_g" optional="show"/>
+                <field name="diamond_karat" optional="hide"/>
+                <field name="silver_purity" optional="hide"/>
                 <field name="gold_purity" optional="show"/>
                 <field name="gold_weight_g" optional="show"/>
             </xpath>
@@ -30,6 +34,10 @@
         <field name="inherit_id" ref="account.view_move_line_form"/>
         <field name="arch" type="xml">
             <xpath expr="//field[@name='name']" position="after">
+                <field name="jewellery_type"/>
+                <field name="jewellery_weight_g"/>
+                <field name="diamond_karat"/>
+                <field name="silver_purity"/>
                 <field name="gold_purity"/>
                 <field name="gold_weight_g"/>
             </xpath>
@@ -45,6 +53,10 @@
         <field name="inherit_id" ref="account.view_move_form"/>
         <field name="arch" type="xml">
             <xpath expr="//field[@name='invoice_line_ids']/tree/field[@name='quantity']" position="before">
+                <field name="jewellery_type"/>
+                <field name="jewellery_weight_g"/>
+                <field name="diamond_karat"/>
+                <field name="silver_purity"/>
                 <field name="gold_purity"/>
                 <field name="gold_weight_g"/>
             </xpath>

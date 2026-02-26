@@ -63,7 +63,7 @@ class DiamondPriceService(models.Model):
         discount_pct = self.get_global_diamond_discount()
 
         diamond_products = self.env['product.template'].search([
-            ('is_diamond_product', '=', True),
+            ('jewellery_type', '=', 'diamond_jewellery'),
         ])
 
         if not diamond_products:
