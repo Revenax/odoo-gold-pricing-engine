@@ -1,15 +1,12 @@
 <?xml version="1.0" encoding="utf-8"?>
 <odoo>
     <!--
-        Extend invoice line views to expose gold-specific fields on all invoice lines.
-        This allows manual entry of purity and weight for both inventory and
-        unregistered gold items. Reporting already uses these fields via the
-        gold invoice report template.
+        Extend invoice line views to expose unified Karat and Weight columns.
+        Source fields remain on the model for pricing/report logic, while the UI
+        shows only the consolidated columns requested by business users.
     -->
 
-    <!-- Invoice line tree (list) view: add Purity and Weight columns.
-         optional="show" so columns are visible by default in list/editable tree.
-         priority 101 so this inheritance applies after base (100) and columns show. -->
+    <!-- Invoice line tree (list) view: add unified Karat and Weight columns. -->
     <record id="view_move_line_tree_jewellery_evaluator" model="ir.ui.view">
         <field name="name">account.move.line.tree.jewellery.evaluator</field>
         <field name="model">account.move.line</field>
@@ -17,34 +14,26 @@
         <field name="priority" eval="101"/>
         <field name="arch" type="xml">
             <xpath expr="//field[@name='name']" position="after">
-                <field name="jewellery_type" optional="show"/>
-                <field name="jewellery_weight_g" optional="show"/>
-                <field name="diamond_karat" optional="hide"/>
-                <field name="silver_purity" optional="hide"/>
-                <field name="gold_purity" optional="show"/>
-                <field name="gold_weight_g" optional="show"/>
+                <field name="karat_display" string="Karat" optional="show" readonly="1"/>
+                <field name="weight_display_g" string="Weight" optional="show" readonly="1"/>
             </xpath>
         </field>
     </record>
 
-    <!-- Invoice line form view: add Purity and Weight fields -->
+    <!-- Invoice line form view: add unified Karat and Weight fields -->
     <record id="view_move_line_form_jewellery_evaluator" model="ir.ui.view">
         <field name="name">account.move.line.form.jewellery.evaluator</field>
         <field name="model">account.move.line</field>
         <field name="inherit_id" ref="account.view_move_line_form"/>
         <field name="arch" type="xml">
             <xpath expr="//field[@name='name']" position="after">
-                <field name="jewellery_type"/>
-                <field name="jewellery_weight_g"/>
-                <field name="diamond_karat"/>
-                <field name="silver_purity"/>
-                <field name="gold_purity"/>
-                <field name="gold_weight_g"/>
+                <field name="karat_display" string="Karat" readonly="1"/>
+                <field name="weight_display_g" string="Weight" readonly="1"/>
             </xpath>
         </field>
     </record>
 
-    <!-- Invoice form: add Purity and Weight to the invoice line list on the move form.
+    <!-- Invoice form: add unified Karat and Weight to the invoice line list on the move form.
          In Odoo 17 the form may use an inline tree for invoice_line_ids; this xpath
          adds our columns there so they are visible when editing an invoice. -->
     <record id="view_move_form_jewellery_evaluator" model="ir.ui.view">
@@ -53,12 +42,8 @@
         <field name="inherit_id" ref="account.view_move_form"/>
         <field name="arch" type="xml">
             <xpath expr="//field[@name='invoice_line_ids']/tree/field[@name='quantity']" position="before">
-                <field name="jewellery_type"/>
-                <field name="jewellery_weight_g"/>
-                <field name="diamond_karat"/>
-                <field name="silver_purity"/>
-                <field name="gold_purity"/>
-                <field name="gold_weight_g"/>
+                <field name="karat_display" string="Karat" readonly="1"/>
+                <field name="weight_display_g" string="Weight" readonly="1"/>
             </xpath>
         </field>
     </record>
