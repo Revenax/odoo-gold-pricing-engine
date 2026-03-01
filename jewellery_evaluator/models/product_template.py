@@ -184,16 +184,16 @@ class ProductTemplate(models.Model):
     silver_cost_price = fields.Float(
         string='Silver Cost Price',
         digits=(16, 2),
-        compute='_compute_silver_prices',
         store=True,
-        help='Computed cost: silver 999 price per gram × weight.',
+        readonly=True,
+        help='Cost price: silver 999 price per gram × weight.',
     )
 
     silver_min_sale_price = fields.Float(
         string='Silver Minimum Sale Price',
         digits=(16, 2),
-        compute='_compute_silver_prices',
         store=True,
+        readonly=True,
         help='Minimum allowed sale price for silver: cost + (markup × 0.7).',
     )
 
@@ -262,9 +262,11 @@ class ProductTemplate(models.Model):
 
         jewellery_type = normalized.get('jewellery_type')
         if jewellery_type in self.JEWELLERY_TYPE_TO_GOLD_TYPE:
-            normalized['gold_type'] = self._map_jewellery_type_to_gold_type(jewellery_type)
+            normalized['gold_type'] = self._map_jewellery_type_to_gold_type(
+                jewellery_type)
             if 'jewellery_weight_g' in normalized:
-                normalized['gold_weight_g'] = normalized.get('jewellery_weight_g') or 0.0
+                normalized['gold_weight_g'] = normalized.get(
+                    'jewellery_weight_g') or 0.0
         elif 'jewellery_type' in normalized:
             normalized['gold_type'] = False
             normalized['gold_weight_g'] = 0.0
@@ -300,7 +302,8 @@ class ProductTemplate(models.Model):
                 continue
 
             # Get markup per gram from settings (bars use weight-tier lookup)
-            internal_gold_type = record._map_jewellery_type_to_gold_type(record.jewellery_type)
+            internal_gold_type = record._map_jewellery_type_to_gold_type(
+                record.jewellery_type)
             if not internal_gold_type:
                 record.gold_cost_price = 0.0
                 record.gold_min_sale_price = 0.0
@@ -332,50 +335,6 @@ class ProductTemplate(models.Model):
                 record.gold_cost_price = 0.0
                 record.gold_min_sale_price = 0.0
 
-    @api.depends('jewellery_type', 'jewellery_weight_g', 'silver_purity')
-    def _compute_silver_prices(self):
-        """Compute silver cost and minimum sale price from silver 999 price."""
-        silver_service = self.env['silver.price.service']
-        try:
-            base_silver = silver_service.get_current_silver_price_999()
-        except Exception as e:
-            _logger.warning(
-                'Silver price service failed in _compute_silver_prices: %s',
-                str(e), exc_info=True,
-            )
-            base_silver = 0.0
-
-        markup_per_gram = get_silver_markup_per_gram(self.env)
-
-        for record in self:
-            if not record.is_silver_product:
-                record.silver_cost_price = 0.0
-                record.silver_min_sale_price = 0.0
-                continue
-            if not record.jewellery_weight_g or record.jewellery_weight_g <= 0:
-                record.silver_cost_price = 0.0
-                record.silver_min_sale_price = 0.0
-                continue
-            if not record.silver_purity:
-                record.silver_cost_price = 0.0
-                record.silver_min_sale_price = 0.0
-                continue
-            if base_silver <= 0 or markup_per_gram < 0:
-                record.silver_cost_price = 0.0
-                record.silver_min_sale_price = 0.0
-                continue
-            try:
-                cost_price, _sale_price, min_sale_price = compute_silver_product_price(
-                    base_silver_999_per_gram=base_silver,
-                    weight_g=record.jewellery_weight_g,
-                    markup_per_gram=markup_per_gram,
-                )
-                record.silver_cost_price = cost_price
-                record.silver_min_sale_price = min_sale_price
-            except ValueError:
-                record.silver_cost_price = 0.0
-                record.silver_min_sale_price = 0.0
-
     def _get_gold_price_update_vals(self, base_gold_price):
         """
         Prepare standard and list price updates for gold products.
@@ -395,7 +354,8 @@ class ProductTemplate(models.Model):
         if not self.gold_purity:
             return {}
 
-        internal_gold_type = self._map_jewellery_type_to_gold_type(self.jewellery_type)
+        internal_gold_type = self._map_jewellery_type_to_gold_type(
+            self.jewellery_type)
         if not internal_gold_type:
             return {}
 
@@ -422,10 +382,10 @@ class ProductTemplate(models.Model):
 
     def _get_silver_price_update_vals(self, base_silver_999):
         """
-        Prepare list price update for silver products.
+        Prepare list price, cost price, and min sale price update for silver products.
 
         :param base_silver_999: Silver 999 price per gram (EGP)
-        :return: dict with list_price or empty if not applicable
+        :return: dict with list_price, silver_cost_price, silver_min_sale_price or empty
         """
         self.ensure_one()
         if not self.is_silver_product or not self.jewellery_weight_g or self.jewellery_weight_g <= 0:
@@ -435,13 +395,19 @@ class ProductTemplate(models.Model):
         markup_per_gram = get_silver_markup_per_gram(self.env)
         if markup_per_gram < 0:
             return {}
+        if base_silver_999 <= 0:
+            return {}
         try:
-            _cost, sale_price, _min = compute_silver_product_price(
+            cost_price, sale_price, min_sale_price = compute_silver_product_price(
                 base_silver_999_per_gram=base_silver_999,
                 weight_g=self.jewellery_weight_g,
                 markup_per_gram=markup_per_gram,
             )
-            return {'list_price': sale_price}
+            return {
+                'list_price': sale_price,
+                'silver_cost_price': cost_price,
+                'silver_min_sale_price': min_sale_price,
+            }
         except ValueError:
             return {}
 
@@ -471,7 +437,8 @@ class ProductTemplate(models.Model):
     def _onchange_sync_gold_legacy_fields(self):
         for record in self:
             if record.jewellery_type in self.JEWELLERY_TYPE_TO_GOLD_TYPE:
-                record.gold_type = record._map_jewellery_type_to_gold_type(record.jewellery_type)
+                record.gold_type = record._map_jewellery_type_to_gold_type(
+                    record.jewellery_type)
                 record.gold_weight_g = record.jewellery_weight_g or 0.0
             elif record.jewellery_type:
                 record.gold_type = False
@@ -513,12 +480,15 @@ class ProductTemplate(models.Model):
 
     @api.onchange('jewellery_type', 'jewellery_weight_g', 'silver_purity')
     def _onchange_silver_pricing_fields(self):
-        """Update list price when silver fields change."""
+        """Update prices when silver fields change in the form."""
         try:
             silver_service = self.env['silver.price.service']
             base_silver = silver_service.get_current_silver_price_999()
             for record in self:
                 if not record.is_silver_product:
+                    # Clear silver fields when switching away from silver type
+                    record.silver_cost_price = 0.0
+                    record.silver_min_sale_price = 0.0
                     continue
                 update_vals = record._get_silver_price_update_vals(base_silver)
                 if update_vals:
@@ -531,7 +501,8 @@ class ProductTemplate(models.Model):
 
     @api.model_create_multi
     def create(self, vals_list):
-        normalized_vals_list = [self._normalize_jewellery_vals(vals) for vals in vals_list]
+        normalized_vals_list = [
+            self._normalize_jewellery_vals(vals) for vals in vals_list]
         records = super().create(normalized_vals_list)
         try:
             if not self.env.context.get('skip_gold_price_update'):
@@ -567,7 +538,8 @@ class ProductTemplate(models.Model):
                             ).write(update_vals)
 
             if not self.env.context.get('skip_silver_price_update'):
-                silver_records = records.filtered(lambda r: r.jewellery_type == 'silver')
+                silver_records = records.filtered(
+                    lambda r: r.jewellery_type == 'silver')
                 if silver_records:
                     silver_service = self.env['silver.price.service']
                     base_silver = silver_service.get_current_silver_price_999()
@@ -619,9 +591,11 @@ class ProductTemplate(models.Model):
                             ).write(update_vals)
 
             if not self.env.context.get('skip_silver_price_update'):
-                silver_records = self.filtered(lambda r: r.jewellery_type == 'silver')
+                silver_records = self.filtered(
+                    lambda r: r.jewellery_type == 'silver')
                 if silver_records and (
-                    self.SILVER_PRICE_UPDATE_FIELDS & set(normalized_vals.keys())
+                    self.SILVER_PRICE_UPDATE_FIELDS & set(
+                        normalized_vals.keys())
                 ):
                     silver_service = self.env['silver.price.service']
                     base_silver = silver_service.get_current_silver_price_999()
@@ -668,7 +642,8 @@ class ProductTemplate(models.Model):
                         f'Invalid gold purity: {record.gold_purity}. '
                         f'Must be one of: {", ".join(sorted(self.VALID_GOLD_PURITIES))}'
                     )
-                expected_gold_type = record._map_jewellery_type_to_gold_type(record.jewellery_type)
+                expected_gold_type = record._map_jewellery_type_to_gold_type(
+                    record.jewellery_type)
                 if not record.gold_type or record.gold_type != expected_gold_type:
                     raise ValidationError(
                         'Internal Gold Type is not synchronized with Jewellery Type.'
@@ -716,7 +691,8 @@ class ProductTemplate(models.Model):
         skipped_count = 0
 
         for product in gold_products:
-            internal_gold_type = product._map_jewellery_type_to_gold_type(product.jewellery_type)
+            internal_gold_type = product._map_jewellery_type_to_gold_type(
+                product.jewellery_type)
             if not internal_gold_type:
                 skipped_count += 1
                 continue
