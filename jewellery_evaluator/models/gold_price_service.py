@@ -6,7 +6,7 @@
 import logging
 
 import requests
-from odoo import models
+from odoo import api, models
 
 from ..utils import parse_gold_price_with_regex  # noqa: E402
 
@@ -152,6 +152,7 @@ class GoldPriceService(models.Model):
             )
             return 75.0
 
+    @api.model
     def update_all_gold_product_prices(self):
         """
         Update prices for all gold products.
@@ -169,7 +170,8 @@ class GoldPriceService(models.Model):
             # Get all gold products with required data
             # Only update products that have weight, purity, and type configured
             gold_products = self.env['product.template'].search([
-                ('jewellery_type', 'in', ['gold_local', 'gold_foreign', 'gold_bars']),
+                ('jewellery_type', 'in', [
+                 'gold_local', 'gold_foreign', 'gold_bars']),
                 ('gold_purity', '!=', False),
                 ('jewellery_weight_g', '>', 0),
             ])

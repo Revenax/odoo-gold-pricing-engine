@@ -227,6 +227,8 @@ class ResConfigSettings(models.TransientModel):
                 "require_customer": self.require_customer,
                 "default_to_invoice": self.pos_to_invoice_by_default,
             })
+        # Trigger silver product price recalculation when silver settings change
+        self.env['silver.price.service'].update_all_silver_product_prices()
 
     def get_markup_for_type(self, gold_type, weight_g=None):
         """

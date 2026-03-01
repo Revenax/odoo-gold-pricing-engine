@@ -50,7 +50,8 @@ def create_driver():
     opts.add_argument("--disable-gpu")
     opts.add_experimental_option(
         "prefs",
-        {"profile.managed_default_content_settings.images": 2, "profile.default_content_setting_values.images": 2},
+        {"profile.managed_default_content_settings.images": 2,
+            "profile.default_content_setting_values.images": 2},
     )
     for a in ("--disable-extensions", "--disable-plugins", "--disable-sync", "--disable-translate",
               "--disable-background-networking", "--no-first-run", "--log-level=3"):
@@ -62,18 +63,23 @@ def create_driver():
 
 def _push_to_odoo(price):
     url = (os.environ.get("ODOO_URL") or "").rstrip("/")
-    db, user, pwd = os.environ.get("ODOO_DB", ""), os.environ.get("ODOO_USER", ""), os.environ.get("ODOO_PASSWORD", "")
+    db, user, pwd = os.environ.get("ODOO_DB", ""), os.environ.get(
+        "ODOO_USER", ""), os.environ.get("ODOO_PASSWORD", "")
     if not url or not db or not user or not pwd:
         return False
     try:
         import xmlrpc.client
-        common = xmlrpc.client.ServerProxy(f"{url}/xmlrpc/2/common", allow_none=True)
+        common = xmlrpc.client.ServerProxy(
+            f"{url}/xmlrpc/2/common", allow_none=True)
         uid = common.authenticate(db, user, pwd, {})
         if not uid:
             return False
-        models = xmlrpc.client.ServerProxy(f"{url}/xmlrpc/2/object", allow_none=True)
-        models.execute_kw(db, uid, pwd, "silver.price.service", "set_silver_price_999", [float(price)])
-        models.execute_kw(db, uid, pwd, "silver.price.service", "update_all_silver_product_prices", [])
+        models = xmlrpc.client.ServerProxy(
+            f"{url}/xmlrpc/2/object", allow_none=True)
+        models.execute_kw(db, uid, pwd, "silver.price.service",
+                          "set_silver_price_999", [float(price)])
+        models.execute_kw(db, uid, pwd, "silver.price.service",
+                          "update_all_silver_product_prices", [[]])
         return True
     except Exception:
         return False
