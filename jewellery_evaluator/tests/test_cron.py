@@ -78,6 +78,7 @@ class TestGoldPricingCron(common.TransactionCase):
         product_model = self.env["product.template"].with_context(
             skip_gold_price_update=True,
             skip_diamond_price_update=True,
+            skip_silver_price_update=True,
         )
         gold_product = product_model.create({
             "name": "Gold Cron Product",
@@ -111,6 +112,7 @@ class TestGoldPricingCron(common.TransactionCase):
         product_model = self.env["product.template"].with_context(
             skip_gold_price_update=True,
             skip_diamond_price_update=True,
+            skip_silver_price_update=True,
         )
         diamond_product = product_model.create({
             "name": "Diamond Cron Product",
@@ -132,3 +134,32 @@ class TestGoldPricingCron(common.TransactionCase):
         silver_product.invalidate_cache()
         self.assertGreater(diamond_product.list_price, 0.0)
         self.assertEqual(silver_product.list_price, 777.0)
+
+    def test_cron_silver_prices_record_exists_and_active(self):
+        """Scheduled action for silver price updates is installed and active."""
+        cron = self.env.ref(
+            "jewellery_evaluator.ir_cron_update_silver_prices",
+            raise_if_not_found=False,
+        )
+        self.assertTrue(cron, "Silver price cron record should exist")
+        self.assertTrue(cron.active, "Silver price cron should be active")
+        self.assertEqual(cron.model_id.model, "silver.price.service")
+        self.assertEqual(cron.code, "model.update_all_silver_product_prices()")
+        self.assertEqual(cron.interval_number, 10)
+        self.assertEqual(cron.interval_type, "minutes")
+
+    def test_update_all_silver_product_prices_runs(self):
+        """Silver update method runs without error when API is available (mocked)."""
+        service = self.env["silver.price.service"]
+        with mock.patch.object(
+            type(service),
+            "_fetch_silver_price_from_api",
+            return_value=165.0,
+        ):
+            result = service.update_all_silver_product_prices()
+        self.assertIsInstance(result, dict)
+        self.assertIn("success", result)
+        self.assertIn("products_updated", result)
+        self.assertIn("base_price", result)
+        self.assertTrue(result["success"])
+        self.assertEqual(result["base_price"], 165.0)
