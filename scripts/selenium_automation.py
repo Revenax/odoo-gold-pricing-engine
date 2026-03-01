@@ -6,6 +6,7 @@ Website: https://www.revenax.com
 """
 
 import os
+import re
 import sys
 try:
     from selenium import webdriver
@@ -18,6 +19,23 @@ except ImportError:
 
 SILVER_PAGE = "https://dahabmasr.com/silver-price-today-en"
 PRICE_CELL_XPATH = "/html/body/div[3]/main/div[2]/div/div[2]/section/div/div[2]/div[1]/table/tbody/tr[1]/td[3]"
+
+# Extract first number (digits and optional decimal/comma) from scraped text
+_PRICE_NUMERIC = re.compile(r"[\d,]+(?:\.\d+)?")
+
+
+def _parse_price_from_text(text):
+    """Extract numeric price from cell text (e.g. '165EGP' or '1,234.56')."""
+    if not text or not text.strip():
+        return None
+    s = text.strip().replace(",", "")
+    m = _PRICE_NUMERIC.search(s)
+    if not m:
+        return None
+    try:
+        return float(m.group(0).replace(",", ""))
+    except (ValueError, TypeError):
+        return None
 
 
 def _text_not_placeholder(driver):
@@ -77,14 +95,12 @@ def main():
         driver.get(SILVER_PAGE)
         el = WebDriverWait(driver, 30).until(_text_not_placeholder)
         raw = el.text.strip()
-        # Normalize: remove commas, parse float for Odoo
-        silver_price_999 = raw.replace(",", "").strip()
-        try:
-            _ = float(silver_price_999)
-        except ValueError:
-            silver_price_999 = raw
-        print("Silver 999:", silver_price_999)
-        return silver_price_999
+        price = _parse_price_from_text(raw)
+        if price is not None:
+            print("Silver 999:", price)
+            return price
+        print("Silver 999:", raw)
+        return raw
     finally:
         driver.quit()
 

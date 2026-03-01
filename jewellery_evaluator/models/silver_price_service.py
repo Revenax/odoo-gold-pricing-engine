@@ -37,15 +37,24 @@ class SilverPriceService(models.Model):
         raw = self.env['ir.config_parameter'].sudo().get_param(
             'jewellery_evaluator.silver_999_price', ''
         )
-        if not raw or not raw.strip():
+        if not raw or not str(raw).strip():
             return self._get_fallback_silver_price()
+        return self._parse_silver_price_string(raw) or self._get_fallback_silver_price()
+
+    def _parse_silver_price_string(self, raw):
+        """Parse a price string that may contain 'EGP' or commas (e.g. '165EGP', '1,234.56')."""
+        if raw is None:
+            return None
+        s = str(raw).strip().replace(',', '')
+        # Strip trailing non-numeric (e.g. EGP)
+        s = s.rstrip('EGPegp \t').strip()
+        if not s:
+            return None
         try:
-            value = float(str(raw).replace(',', '').strip())
-            if value <= 0:
-                return self._get_fallback_silver_price()
-            return value
+            value = float(s)
+            return value if value > 0 else None
         except (ValueError, TypeError):
-            return self._get_fallback_silver_price()
+            return None
 
     def _get_fallback_silver_price(self):
         raw = self.env['ir.config_parameter'].sudo().get_param(
