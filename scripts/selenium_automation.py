@@ -1,13 +1,9 @@
 #!/usr/bin/env python3
 """
-Fetch silver 999 price from dahabmasr.com (Selenium; page is JS-rendered).
+Selenium: render dahabmasr.com, get silver 999 price from XPath element.
+Optionally push to Odoo when ODOO_URL, ODOO_DB, ODOO_USER, ODOO_PASSWORD are set.
 
-Run: .venv/bin/python scripts/selenium_automation.py
-
-For Odoo: Configure Silver API Endpoint + Silver 999 Regex in Settings.
-If your source returns static HTML, Odoo fetches via HTTP like gold.
-If the source is JS-rendered (e.g. dahabmasr), use an external job to fetch
-and expose an HTTP endpoint, or run this script and set the fallback manually.
+Run: ODOO_URL=... ODOO_DB=... ODOO_USER=... ODOO_PASSWORD=... .venv/bin/python scripts/selenium_automation.py
 """
 
 import os
@@ -64,6 +60,25 @@ def create_driver():
     return d
 
 
+def _push_to_odoo(price):
+    url = (os.environ.get("ODOO_URL") or "").rstrip("/")
+    db, user, pwd = os.environ.get("ODOO_DB", ""), os.environ.get("ODOO_USER", ""), os.environ.get("ODOO_PASSWORD", "")
+    if not url or not db or not user or not pwd:
+        return False
+    try:
+        import xmlrpc.client
+        common = xmlrpc.client.ServerProxy(f"{url}/xmlrpc/2/common", allow_none=True)
+        uid = common.authenticate(db, user, pwd, {})
+        if not uid:
+            return False
+        models = xmlrpc.client.ServerProxy(f"{url}/xmlrpc/2/object", allow_none=True)
+        models.execute_kw(db, uid, pwd, "silver.price.service", "set_silver_price_999", [float(price)])
+        models.execute_kw(db, uid, pwd, "silver.price.service", "update_all_silver_product_prices", [])
+        return True
+    except Exception:
+        return False
+
+
 def main():
     driver = create_driver()
     try:
@@ -72,6 +87,8 @@ def main():
         price = _parse_price(el.text)
         if price is not None:
             print("Silver 999:", price)
+            if _push_to_odoo(price):
+                print("Odoo: updated.")
             return price
         print("Silver 999:", el.text.strip())
         return None

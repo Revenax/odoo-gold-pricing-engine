@@ -33,24 +33,12 @@ class ResConfigSettings(models.TransientModel):
              'Automatically updated to the last fetched price whenever the API returns successfully.',
     )
 
-    silver_api_endpoint = fields.Char(
-        string='Silver API Endpoint',
-        config_parameter='jewellery_evaluator.silver_api_endpoint',
-        help='URL for fetching silver 999 price. Same pattern as gold: GET request, regex extraction.',
-    )
-
-    silver_999_regex_formula = fields.Char(
-        string='Silver 999 Regex Formula',
-        config_parameter='jewellery_evaluator.silver_999_regex_formula',
-        help='Regex applied to API response to extract 999 price. One capturing group for the number.',
-    )
-
     silver_fallback_price = fields.Float(
-        string='Silver Fallback Price (EGP/g)',
+        string='Silver 999 Price (EGP/g)',
         config_parameter='jewellery_evaluator.silver_fallback_price',
         digits=(16, 4),
         default=0.0,
-        help='Fallback when API unavailable. Auto-updated on successful fetch.',
+        help='Silver 999 price per gram. Set by Selenium script (scripts/selenium_automation.py).',
     )
 
     silver_markup_per_gram = fields.Float(

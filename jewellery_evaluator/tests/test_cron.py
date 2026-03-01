@@ -149,14 +149,12 @@ class TestGoldPricingCron(common.TransactionCase):
         self.assertEqual(cron.interval_type, "minutes")
 
     def test_update_all_silver_product_prices_runs(self):
-        """Silver update method runs without error when API is available (mocked)."""
+        """Silver update method runs when price is set (mocked)."""
+        self.env["ir.config_parameter"].sudo().set_param(
+            "jewellery_evaluator.silver_fallback_price", "165.0"
+        )
         service = self.env["silver.price.service"]
-        with mock.patch.object(
-            type(service),
-            "_fetch_silver_price_from_api",
-            return_value=165.0,
-        ):
-            result = service.update_all_silver_product_prices()
+        result = service.update_all_silver_product_prices()
         self.assertIsInstance(result, dict)
         self.assertIn("success", result)
         self.assertIn("products_updated", result)
