@@ -33,6 +33,31 @@ class ResConfigSettings(models.TransientModel):
              'Automatically updated to the last fetched price whenever the API returns successfully.',
     )
 
+    silver_999_price = fields.Float(
+        string='Silver 999 Price (EGP/g)',
+        config_parameter='jewellery_evaluator.silver_999_price',
+        digits=(16, 4),
+        default=0.0,
+        help='Current silver 999 price per gram. Set manually or via script (e.g. scripts/selenium_automation.py). '
+             'Cron updates product prices from this value.',
+    )
+
+    silver_fallback_price = fields.Float(
+        string='Silver Fallback Price (EGP/g)',
+        config_parameter='jewellery_evaluator.silver_fallback_price',
+        digits=(16, 4),
+        default=0.0,
+        help='Fallback silver 999 price per gram when silver_999_price is not set.',
+    )
+
+    silver_markup_per_gram = fields.Float(
+        string='Silver Markup per Gram (EGP/g)',
+        config_parameter='jewellery_evaluator.silver_markup_per_gram',
+        digits=(16, 4),
+        default=0.0,
+        help='Markup per gram for silver products.',
+    )
+
     markup_jewellery_local = fields.Float(
         string='Markup per Gram - Jewellery (Local)',
         config_parameter='jewellery_evaluator.markup_jewellery_local',

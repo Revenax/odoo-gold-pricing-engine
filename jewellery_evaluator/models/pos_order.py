@@ -148,6 +148,22 @@ class PosOrder(models.Model):
                                     f'{max_discount_percent:.2f}% (50% of markup). '
                                     f'Current discount: {discount:.2f}%'
                                 )
+                elif getattr(product, 'is_silver_product', False):
+                    effective_min = product.silver_min_sale_price or (price_unit * 0.8)
+                    if effective_min > 0:
+                        final_price = price_unit * (1 - discount / 100.0)
+                        if final_price < effective_min:
+                            raise ValidationError(
+                                _(
+                                    'Cannot sell %(name)s below minimum price of %(min).2f. '
+                                    'Current price: %(price).2f'
+                                )
+                                % {
+                                    'name': product.name,
+                                    'min': effective_min,
+                                    'price': final_price,
+                                }
+                            )
 
         # Validate storable product quantities do not exceed available stock
         self._check_storable_product_stock(ui_order, lines_data)
@@ -318,15 +334,20 @@ class PosOrderLine(models.Model):
     @api.constrains('price_unit', 'discount')
     def _check_gold_minimum_price(self):
         """
-        Constraint to ensure gold products are not sold below minimum price.
+        Constraint to ensure gold and silver products are not sold below minimum price.
         When no minimum sale price is set, assume 20% max discount (min = price_unit * 0.8).
         """
         for line in self:
-            if not line.product_id.is_gold_product:
+            if line.product_id.is_gold_product:
+                effective_min = (
+                    line.product_id.gold_min_sale_price or (line.price_unit * 0.8)
+                )
+            elif line.product_id.is_silver_product:
+                effective_min = (
+                    line.product_id.silver_min_sale_price or (line.price_unit * 0.8)
+                )
+            else:
                 continue
-            effective_min = (
-                line.product_id.gold_min_sale_price or (line.price_unit * 0.8)
-            )
             if effective_min <= 0:
                 continue
             final_price = line.price_unit * (1 - line.discount / 100.0)

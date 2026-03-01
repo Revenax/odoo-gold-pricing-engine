@@ -76,7 +76,13 @@ def main():
     try:
         driver.get(SILVER_PAGE)
         el = WebDriverWait(driver, 30).until(_text_not_placeholder)
-        silver_price_999 = el.text.strip()
+        raw = el.text.strip()
+        # Normalize: remove commas, parse float for Odoo
+        silver_price_999 = raw.replace(",", "").strip()
+        try:
+            _ = float(silver_price_999)
+        except ValueError:
+            silver_price_999 = raw
         print("Silver 999:", silver_price_999)
         return silver_price_999
     finally:

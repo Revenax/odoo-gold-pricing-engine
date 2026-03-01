@@ -22,16 +22,22 @@ patch(Orderline.prototype, {
    * Maximum discount is limited to 50% of markup value.
    */
   set_discount(discount) {
-    if (!this.product || !this.product.is_gold_product) {
+    const product = this.product;
+    const isGold = product && product.is_gold_product;
+    const isSilver = product && product.is_silver_product;
+    if (!product || (!isGold && !isSilver)) {
       return super.set_discount(...arguments);
     }
 
-    const product = this.product;
     const currentPrice = this.get_unit_price();
     const listPrice = product.list_price || currentPrice;
-    const costPrice = product.gold_cost_price || 0;
-    const weight = product.gold_weight_g || 0;
-    const minSalePrice = product.gold_min_sale_price || 0;
+    const costPrice = isGold
+      ? (product.gold_cost_price || 0)
+      : (product.silver_cost_price || 0);
+    const weight = product.jewellery_weight_g || product.gold_weight_g || 0;
+    const minSalePrice = isGold
+      ? (product.gold_min_sale_price || 0)
+      : (product.silver_min_sale_price || 0);
     // When no minimum sale price is set, assume 20% max discount
     const effectiveMin =
       minSalePrice > 0 ? minSalePrice : currentPrice * 0.8;
@@ -87,8 +93,10 @@ patch(Orderline.prototype, {
    * Override set_unit_price to prevent setting price below minimum.
    */
   set_unit_price(price) {
-    if (this.product && this.product.is_gold_product) {
-      const minSalePrice = this.product.gold_min_sale_price || 0;
+    if (this.product && (this.product.is_gold_product || this.product.is_silver_product)) {
+      const minSalePrice = this.product.is_gold_product
+        ? (this.product.gold_min_sale_price || 0)
+        : (this.product.silver_min_sale_price || 0);
       const listPrice = this.product.list_price || price;
       const effectiveMin =
         minSalePrice > 0 ? minSalePrice : listPrice * 0.8;
@@ -115,8 +123,10 @@ patch(Orderline.prototype, {
   compute_all() {
     const result = super.compute_all(...arguments);
 
-    if (this.product && this.product.is_gold_product) {
-      const minSalePrice = this.product.gold_min_sale_price || 0;
+    if (this.product && (this.product.is_gold_product || this.product.is_silver_product)) {
+      const minSalePrice = this.product.is_gold_product
+        ? (this.product.gold_min_sale_price || 0)
+        : (this.product.silver_min_sale_price || 0);
       const unitPrice = this.get_unit_price();
       const effectiveMin =
         minSalePrice > 0 ? minSalePrice : unitPrice * 0.8;
@@ -208,13 +218,17 @@ patch(ProductScreen.prototype, {
     if (
       selectedLine &&
       selectedLine.product &&
-      selectedLine.product.is_gold_product
+      (selectedLine.product.is_gold_product || selectedLine.product.is_silver_product)
     ) {
       const product = selectedLine.product;
-      const minSalePrice = product.gold_min_sale_price || 0;
+      const minSalePrice = product.is_gold_product
+        ? (product.gold_min_sale_price || 0)
+        : (product.silver_min_sale_price || 0);
       const currentPrice = selectedLine.get_unit_price();
       const listPrice = product.list_price || currentPrice;
-      const costPrice = product.gold_cost_price || 0;
+      const costPrice = product.is_gold_product
+        ? (product.gold_cost_price || 0)
+        : (product.silver_cost_price || 0);
       const effectiveMin =
         minSalePrice > 0 ? minSalePrice : currentPrice * 0.8;
 

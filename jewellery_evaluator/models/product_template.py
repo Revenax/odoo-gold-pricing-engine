@@ -8,7 +8,12 @@ import logging
 from odoo import _, api, fields, models
 from odoo.exceptions import ValidationError
 
-from ..utils import compute_gold_product_price, get_markup_per_gram  # noqa: E402
+from ..utils import (
+    compute_gold_product_price,
+    compute_silver_product_price,
+    get_markup_per_gram,
+    get_silver_markup_per_gram,
+)  # noqa: E402
 
 _logger = logging.getLogger(__name__)
 
@@ -63,6 +68,9 @@ class ProductTemplate(models.Model):
         'gold_type',
     }
     DIAMOND_PRICE_UPDATE_FIELDS = {'jewellery_type', 'diamond_usd_price'}
+    SILVER_PRICE_UPDATE_FIELDS = {
+        'jewellery_type', 'jewellery_weight_g', 'silver_purity',
+    }
 
     jewellery_type = fields.Selection(
         selection=JEWELLERY_TYPE_SELECTION,
@@ -171,6 +179,22 @@ class ProductTemplate(models.Model):
         compute='_compute_gold_prices',
         store=True,
         help='Minimum allowed sale price: cost + (markup × 0.7)',
+    )
+
+    silver_cost_price = fields.Float(
+        string='Silver Cost Price',
+        digits=(16, 2),
+        compute='_compute_silver_prices',
+        store=True,
+        help='Computed cost: silver 999 price per gram × weight.',
+    )
+
+    silver_min_sale_price = fields.Float(
+        string='Silver Minimum Sale Price',
+        digits=(16, 2),
+        compute='_compute_silver_prices',
+        store=True,
+        help='Minimum allowed sale price for silver: cost + (markup × 0.7).',
     )
 
     is_gold_product = fields.Boolean(
@@ -308,6 +332,50 @@ class ProductTemplate(models.Model):
                 record.gold_cost_price = 0.0
                 record.gold_min_sale_price = 0.0
 
+    @api.depends('jewellery_type', 'jewellery_weight_g', 'silver_purity')
+    def _compute_silver_prices(self):
+        """Compute silver cost and minimum sale price from silver 999 price."""
+        silver_service = self.env['silver.price.service']
+        try:
+            base_silver = silver_service.get_current_silver_price_999()
+        except Exception as e:
+            _logger.warning(
+                'Silver price service failed in _compute_silver_prices: %s',
+                str(e), exc_info=True,
+            )
+            base_silver = 0.0
+
+        markup_per_gram = get_silver_markup_per_gram(self.env)
+
+        for record in self:
+            if not record.is_silver_product:
+                record.silver_cost_price = 0.0
+                record.silver_min_sale_price = 0.0
+                continue
+            if not record.jewellery_weight_g or record.jewellery_weight_g <= 0:
+                record.silver_cost_price = 0.0
+                record.silver_min_sale_price = 0.0
+                continue
+            if not record.silver_purity:
+                record.silver_cost_price = 0.0
+                record.silver_min_sale_price = 0.0
+                continue
+            if base_silver <= 0 or markup_per_gram < 0:
+                record.silver_cost_price = 0.0
+                record.silver_min_sale_price = 0.0
+                continue
+            try:
+                cost_price, _sale_price, min_sale_price = compute_silver_product_price(
+                    base_silver_999_per_gram=base_silver,
+                    weight_g=record.jewellery_weight_g,
+                    markup_per_gram=markup_per_gram,
+                )
+                record.silver_cost_price = cost_price
+                record.silver_min_sale_price = min_sale_price
+            except ValueError:
+                record.silver_cost_price = 0.0
+                record.silver_min_sale_price = 0.0
+
     def _get_gold_price_update_vals(self, base_gold_price):
         """
         Prepare standard and list price updates for gold products.
@@ -351,6 +419,31 @@ class ProductTemplate(models.Model):
         return {
             'list_price': sale_price,
         }
+
+    def _get_silver_price_update_vals(self, base_silver_999):
+        """
+        Prepare list price update for silver products.
+
+        :param base_silver_999: Silver 999 price per gram (EGP)
+        :return: dict with list_price or empty if not applicable
+        """
+        self.ensure_one()
+        if not self.is_silver_product or not self.jewellery_weight_g or self.jewellery_weight_g <= 0:
+            return {}
+        if not self.silver_purity:
+            return {}
+        markup_per_gram = get_silver_markup_per_gram(self.env)
+        if markup_per_gram < 0:
+            return {}
+        try:
+            _cost, sale_price, _min = compute_silver_product_price(
+                base_silver_999_per_gram=base_silver_999,
+                weight_g=self.jewellery_weight_g,
+                markup_per_gram=markup_per_gram,
+            )
+            return {'list_price': sale_price}
+        except ValueError:
+            return {}
 
     def _get_diamond_price_update_vals(self):
         """
@@ -418,6 +511,24 @@ class ProductTemplate(models.Model):
                 _('Diamond price could not be updated. Details: %s') % str(e)
             ) from e
 
+    @api.onchange('jewellery_type', 'jewellery_weight_g', 'silver_purity')
+    def _onchange_silver_pricing_fields(self):
+        """Update list price when silver fields change."""
+        try:
+            silver_service = self.env['silver.price.service']
+            base_silver = silver_service.get_current_silver_price_999()
+            for record in self:
+                if not record.is_silver_product:
+                    continue
+                update_vals = record._get_silver_price_update_vals(base_silver)
+                if update_vals:
+                    record.update(update_vals)
+        except Exception as e:
+            raise ValidationError(
+                _('Silver price could not be updated. Check silver 999 price and markup in Settings. Details: %s')
+                % str(e)
+            ) from e
+
     @api.model_create_multi
     def create(self, vals_list):
         normalized_vals_list = [self._normalize_jewellery_vals(vals) for vals in vals_list]
@@ -454,9 +565,27 @@ class ProductTemplate(models.Model):
                             record.with_context(
                                 skip_diamond_price_update=True
                             ).write(update_vals)
+
+            if not self.env.context.get('skip_silver_price_update'):
+                if any(
+                    self.SILVER_PRICE_UPDATE_FIELDS & vals.keys()
+                    for vals in normalized_vals_list
+                ):
+                    silver_service = self.env['silver.price.service']
+                    base_silver = silver_service.get_current_silver_price_999()
+                    for record in records:
+                        if not record.is_silver_product:
+                            continue
+                        update_vals = record._get_silver_price_update_vals(
+                            base_silver
+                        )
+                        if update_vals:
+                            record.with_context(
+                                skip_silver_price_update=True
+                            ).write(update_vals)
         except Exception as e:
             raise ValidationError(
-                _('Product price update failed. Please check gold/diamond '
+                _('Product price update failed. Please check gold/diamond/silver '
                   'settings or try again. Details: %s') % str(e)
             ) from e
         return records
@@ -492,9 +621,24 @@ class ProductTemplate(models.Model):
                             record.with_context(
                                 skip_diamond_price_update=True
                             ).write(update_vals)
+
+            if not self.env.context.get('skip_silver_price_update'):
+                if self.SILVER_PRICE_UPDATE_FIELDS & set(normalized_vals.keys()):
+                    silver_service = self.env['silver.price.service']
+                    base_silver = silver_service.get_current_silver_price_999()
+                    for record in self:
+                        if not record.is_silver_product:
+                            continue
+                        update_vals = record._get_silver_price_update_vals(
+                            base_silver
+                        )
+                        if update_vals:
+                            record.with_context(
+                                skip_silver_price_update=True
+                            ).write(update_vals)
         except Exception as e:
             raise ValidationError(
-                _('Product price update failed. Please check gold/diamond '
+                _('Product price update failed. Please check gold/diamond/silver '
                   'settings or try again. Details: %s') % str(e)
             ) from e
         return res
@@ -619,3 +763,36 @@ class ProductTemplate(models.Model):
         for vals in update_values:
             product = vals.pop('record')
             product.write(vals)
+
+    def update_silver_prices(self, base_silver_999):
+        """
+        Update list price and silver cost/min for silver products.
+        Called by cron (silver.price.service).
+
+        :param base_silver_999: Silver 999 price per gram (EGP)
+        """
+        if not self:
+            return
+        silver_products = self.filtered(
+            lambda p: p.is_silver_product
+            and p.silver_purity
+            and p.jewellery_weight_g
+            and p.jewellery_weight_g > 0
+        )
+        if not silver_products:
+            return
+        markup_per_gram = get_silver_markup_per_gram(self.env)
+        for product in silver_products:
+            try:
+                cost_price, sale_price, min_sale_price = compute_silver_product_price(
+                    base_silver_999_per_gram=base_silver_999,
+                    weight_g=product.jewellery_weight_g,
+                    markup_per_gram=markup_per_gram,
+                )
+                product.write({
+                    'list_price': sale_price,
+                    'silver_cost_price': cost_price,
+                    'silver_min_sale_price': min_sale_price,
+                })
+            except ValueError:
+                continue

@@ -53,6 +53,20 @@
                                 </div>
                             </div>
                         </div>
+                        <div class="col-12 col-lg-6 o_setting_box">
+                            <div class="o_setting_left_pane"/>
+                            <div class="o_setting_right_pane">
+                                <span class="o_form_label">Silver 999 pricing</span>
+                                <div class="text-muted">
+                                    Silver price per gram (set manually or from script). Markup per gram for silver.
+                                </div>
+                                <div class="content-group">
+                                    <field name="silver_999_price" placeholder="e.g. from Selenium script"/>
+                                    <field name="silver_fallback_price"/>
+                                    <field name="silver_markup_per_gram"/>
+                                </div>
+                            </div>
+                        </div>
                     </div>
                     <div class="row mt16 o_settings_container">
                         <div class="col-12 o_setting_box">

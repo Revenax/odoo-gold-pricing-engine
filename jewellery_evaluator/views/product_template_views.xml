@@ -35,6 +35,10 @@
                             <group col="2">
                                 <field name="silver_purity" string="Jewellery Karat"/>
                             </group>
+                            <group col="2">
+                                <field name="silver_cost_price" readonly="1" groups="base.group_system"/>
+                                <field name="silver_min_sale_price" readonly="1"/>
+                            </group>
                         </group>
                     </group>
                 </page>
@@ -55,6 +59,8 @@
                 <field name="is_silver_product" optional="hide"/>
                 <field name="gold_min_sale_price" optional="hide" 
                        invisible="not is_gold_product"/>
+                <field name="silver_min_sale_price" optional="hide" 
+                       invisible="not is_silver_product"/>
             </xpath>
         </field>
     </record>

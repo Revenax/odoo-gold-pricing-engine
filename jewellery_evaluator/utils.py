@@ -52,6 +52,17 @@ def _get_markup_bars_by_weight(env, weight_g: float) -> float:
     return val if val > 0 else BAR_TIER_DEFAULT_MARKUP[idx]
 
 
+def get_silver_markup_per_gram(env) -> float:
+    """Read silver markup per gram from system parameters."""
+    raw = env['ir.config_parameter'].sudo().get_param(
+        'jewellery_evaluator.silver_markup_per_gram', '0.0'
+    )
+    try:
+        return float(raw)
+    except (TypeError, ValueError):
+        return 0.0
+
+
 def get_markup_per_gram(env, gold_type: str, weight_g=None) -> float:
     """
     Read markup per gram from system parameters.
@@ -212,6 +223,65 @@ def compute_gold_product_price(
     )
 
     # Round both to nearest 50 (min_sale first, then sale)
+    round_to_50 = Decimal('50')
+    min_sale_price = (min_sale_price / round_to_50).quantize(
+        Decimal('1'), rounding=ROUND_HALF_UP
+    ) * round_to_50
+    sale_price = (sale_price / round_to_50).quantize(
+        Decimal('1'), rounding=ROUND_HALF_UP
+    ) * round_to_50
+
+    return (float(cost), float(sale_price), float(min_sale_price))
+
+
+def compute_silver_product_price(
+    base_silver_999_per_gram: float,
+    weight_g: float,
+    markup_per_gram: float,
+) -> tuple[float, float, float]:
+    """
+    Compute silver product prices from 999 price per gram, weight, and markup.
+
+    Silver purity 999.0/999.9 are both treated as factor 1.0 (pure silver).
+
+    Args:
+        base_silver_999_per_gram: Silver 999 price per gram (EGP).
+        weight_g: Weight in grams.
+        markup_per_gram: Markup per gram (from settings).
+
+    Returns:
+        tuple: (cost_price, sale_price, min_sale_price)
+            - cost_price: base_silver_999_per_gram * weight_g
+            - sale_price: cost + markup_total, rounded to nearest 50
+            - min_sale_price: cost + (markup_total * 0.7), rounded to nearest 50
+    """
+    if weight_g <= 0:
+        raise ValueError(f'Weight must be greater than 0, got: {weight_g}')
+    if base_silver_999_per_gram <= 0:
+        raise ValueError(
+            'Base silver 999 price per gram must be greater than 0, '
+            f'got: {base_silver_999_per_gram}'
+        )
+    if markup_per_gram < 0:
+        raise ValueError(f'Markup cannot be negative, got: {markup_per_gram}')
+
+    weight = Decimal(str(weight_g))
+    base_price = Decimal(str(base_silver_999_per_gram))
+    markup = Decimal(str(markup_per_gram))
+
+    cost = (base_price * weight).quantize(
+        Decimal('0.01'), rounding=ROUND_HALF_UP
+    )
+    markup_total = (markup * weight).quantize(
+        Decimal('0.01'), rounding=ROUND_HALF_UP
+    )
+    sale_price = (cost + markup_total).quantize(
+        Decimal('0.01'), rounding=ROUND_HALF_UP
+    )
+    min_sale_price = (cost + (markup_total * Decimal('0.7'))).quantize(
+        Decimal('0.01'), rounding=ROUND_HALF_UP
+    )
+
     round_to_50 = Decimal('50')
     min_sale_price = (min_sale_price / round_to_50).quantize(
         Decimal('1'), rounding=ROUND_HALF_UP
