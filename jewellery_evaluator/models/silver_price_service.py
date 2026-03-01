@@ -137,11 +137,13 @@ class SilverPriceService(models.Model):
             )
             return 0.0
         except Exception as e:
-            _logger.error('Selenium silver price fetch failed: %s', e, exc_info=True)
+            _logger.error(
+                'Selenium silver price fetch failed: %s', e, exc_info=True)
             return 0.0
 
         if price is None or price <= 0:
-            _logger.warning('Silver price scrape returned invalid value: %s', price)
+            _logger.warning(
+                'Silver price scrape returned invalid value: %s', price)
             return 0.0
 
         self.set_silver_price_999(price)
