@@ -567,15 +567,11 @@ class ProductTemplate(models.Model):
                             ).write(update_vals)
 
             if not self.env.context.get('skip_silver_price_update'):
-                if any(
-                    self.SILVER_PRICE_UPDATE_FIELDS & vals.keys()
-                    for vals in normalized_vals_list
-                ):
+                silver_records = records.filtered(lambda r: r.jewellery_type == 'silver')
+                if silver_records:
                     silver_service = self.env['silver.price.service']
                     base_silver = silver_service.get_current_silver_price_999()
-                    for record in records:
-                        if not record.is_silver_product:
-                            continue
+                    for record in silver_records:
                         update_vals = record._get_silver_price_update_vals(
                             base_silver
                         )
@@ -623,12 +619,13 @@ class ProductTemplate(models.Model):
                             ).write(update_vals)
 
             if not self.env.context.get('skip_silver_price_update'):
-                if self.SILVER_PRICE_UPDATE_FIELDS & set(normalized_vals.keys()):
+                silver_records = self.filtered(lambda r: r.jewellery_type == 'silver')
+                if silver_records and (
+                    self.SILVER_PRICE_UPDATE_FIELDS & set(normalized_vals.keys())
+                ):
                     silver_service = self.env['silver.price.service']
                     base_silver = silver_service.get_current_silver_price_999()
-                    for record in self:
-                        if not record.is_silver_product:
-                            continue
+                    for record in silver_records:
                         update_vals = record._get_silver_price_update_vals(
                             base_silver
                         )
