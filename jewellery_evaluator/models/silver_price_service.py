@@ -97,9 +97,24 @@ class SilverPriceService(models.Model):
     @api.model
     def get_current_silver_price_999(self):
         """
-        Get current silver 999 price per gram from stored param.
-        Value is set by the Selenium scraper (_fetch_silver_price_from_web)
-        or manually in Settings.
+        Get current silver 999 price per gram.
+        Tries Selenium fetch first (like gold's API fetch); on failure or zero
+        uses stored fallback from Settings.
+        """
+        try:
+            fetched = self._fetch_silver_price_from_web()
+            if fetched and fetched > 0:
+                return fetched
+        except Exception as e:
+            _logger.warning(
+                'Silver fetch failed, using fallback: %s', str(e))
+        return self._get_fallback_silver_price()
+
+    @api.model
+    def _get_fallback_silver_price(self):
+        """
+        Get fallback silver price from system parameters.
+        Used when Selenium fetch is unavailable or fails.
         """
         raw = self.env['ir.config_parameter'].sudo().get_param(
             'jewellery_evaluator.silver_fallback_price', '0.0'
@@ -153,18 +168,12 @@ class SilverPriceService(models.Model):
     @api.model
     def update_all_silver_product_prices(self):
         """
-        Fetch silver price from web (Selenium), then update all silver products.
-        Called by cron every 10 minutes and after Settings are saved.
+        Get current silver price (single entry point: Selenium or fallback),
+        then update all silver products. Called by cron every 10 minutes.
         """
         _logger.info('Starting silver price update for all products')
         try:
-            # Step 1: try to fetch fresh price from the website
-            fetched = self._fetch_silver_price_from_web()
-            if fetched > 0:
-                base_silver = fetched
-            else:
-                # Fall back to last stored price
-                base_silver = self.get_current_silver_price_999()
+            base_silver = self.get_current_silver_price_999()
 
             if base_silver <= 0:
                 _logger.warning(
