@@ -139,8 +139,6 @@ class SilverPriceService(models.Model):
     def _fetch_silver_price_from_web(self):
         """
         Fetch silver 999 price per gram from dahabmasr.com using Selenium.
-        Stores the result in ir.config_parameter on success.
-
         Returns the price (float) or 0.0 on failure.
         """
         try:
@@ -161,7 +159,6 @@ class SilverPriceService(models.Model):
                 'Silver price scrape returned invalid value: %s', price)
             return 0.0
 
-        self.set_silver_price_999(price)
         _logger.info('Silver 999 price fetched from web: %s', price)
         return price
 

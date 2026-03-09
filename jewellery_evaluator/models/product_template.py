@@ -184,6 +184,7 @@ class ProductTemplate(models.Model):
     silver_cost_price = fields.Float(
         string='Silver Cost Price',
         digits=(16, 2),
+        compute='_compute_silver_prices',
         store=True,
         readonly=True,
         help='Cost price: silver 999 price per gram × weight.',
@@ -192,6 +193,7 @@ class ProductTemplate(models.Model):
     silver_min_sale_price = fields.Float(
         string='Silver Minimum Sale Price',
         digits=(16, 2),
+        compute='_compute_silver_prices',
         store=True,
         readonly=True,
         help='Minimum allowed sale price for silver: cost + (markup × 0.7).',
@@ -245,6 +247,54 @@ class ProductTemplate(models.Model):
         """Mark product as silver product based on jewellery type."""
         for record in self:
             record.is_silver_product = bool(record.jewellery_type == 'silver')
+
+    @api.depends('jewellery_type', 'jewellery_weight_g', 'silver_purity')
+    def _compute_silver_prices(self):
+        """Compute silver cost price and minimum sale price (like gold)."""
+        silver_price_service = self.env['silver.price.service']
+        try:
+            base_silver_999 = silver_price_service.get_current_silver_price_999()
+        except Exception as e:
+            _logger.warning(
+                'Silver price service failed in _compute_silver_prices: %s',
+                str(e),
+                exc_info=True,
+            )
+            base_silver_999 = 0.0
+
+        for record in self:
+            if not record.is_silver_product:
+                record.silver_cost_price = 0.0
+                record.silver_min_sale_price = 0.0
+                continue
+            if not record.jewellery_weight_g or record.jewellery_weight_g <= 0:
+                record.silver_cost_price = 0.0
+                record.silver_min_sale_price = 0.0
+                continue
+            if not record.silver_purity:
+                record.silver_cost_price = 0.0
+                record.silver_min_sale_price = 0.0
+                continue
+            markup_per_gram = get_silver_markup_per_gram(self.env)
+            if markup_per_gram < 0:
+                record.silver_cost_price = 0.0
+                record.silver_min_sale_price = 0.0
+                continue
+            if base_silver_999 <= 0:
+                record.silver_cost_price = 0.0
+                record.silver_min_sale_price = 0.0
+                continue
+            try:
+                cost_price, _sale_price, min_sale_price = compute_silver_product_price(
+                    base_silver_999_per_gram=base_silver_999,
+                    weight_g=record.jewellery_weight_g,
+                    markup_per_gram=markup_per_gram,
+                )
+                record.silver_cost_price = cost_price
+                record.silver_min_sale_price = min_sale_price
+            except ValueError:
+                record.silver_cost_price = 0.0
+                record.silver_min_sale_price = 0.0
 
     def _map_jewellery_type_to_gold_type(self, jewellery_type):
         return self.JEWELLERY_TYPE_TO_GOLD_TYPE.get(jewellery_type)
